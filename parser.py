@@ -1,7 +1,28 @@
 import tokens
 import lexer
 import monkey_ast as ast
-from typing import List
+from typing import List, Dict, Callable
+
+
+LOWEST = 1
+EQUALS = 2
+LESSGREATER = 3
+SUM = 4
+PRODUCT = 5
+PREFIX = 6
+CALL = 7
+
+precedences = {
+    tokens.EQ: EQUALS,
+    tokens.NOT_EQ: EQUALS,
+    tokens.LT: LESSGREATER,
+    tokens.GT: LESSGREATER,
+    tokens.PLUS: SUM,
+    tokens.MINUS: SUM,
+    tokens.SLASH: PRODUCT,
+    tokens.ASTERISK: PRODUCT,
+    tokens.LPAREN: CALL
+}
 
 class Parser:
     def __init__(self, lexer: lexer.Lexer):
@@ -11,8 +32,31 @@ class Parser:
         self.cur_token: tokens.Token = None
         self.peek_token: tokens.Token = None
 
+        self.prefix_parse_functions: Dict[tokens.TokenType, Callable] = {
+            tokens.IDENT: self.parse_identifier,
+            tokens.INT: self.parse_integer_literal,
+            tokens.BANG: self.parse_prefix_expression,
+            tokens.MINUS: self.parse_prefix_expression,
+        }
+        self.infix_parse_functions: Dict[tokens.TokenType, Callable] = {
+            tokens.PLUS: self.parse_infix_expression,
+            tokens.MINUS: self.parse_infix_expression,
+            tokens.SLASH: self.parse_infix_expression,
+            tokens.ASTERISK: self.parse_infix_expression,
+            tokens.EQ: self.parse_infix_expression,
+            tokens.NOT_EQ: self.parse_infix_expression,
+            tokens.LT: self.parse_infix_expression,
+            tokens.GT: self.parse_infix_expression,
+        }
+
         self.next_token()
         self.next_token()
+
+    def register_prefix(self, token_type: tokens.TokenType, prefix_parse_function: Callable):
+        self.prefix_parse_functions[token_type] = prefix_parse_function
+    
+    def register_infix(self, token_type: tokens.TokenType, infix_parse_function: Callable):
+        self.infix_parse_functions[token_type] = infix_parse_function
 
     def next_token(self):
         self.cur_token = self.peek_token
@@ -32,7 +76,7 @@ class Parser:
             tokens.LET: self.parse_let_statement,
             tokens.RETURN: self.parse_return_statement,
         }
-        return parse_typ_dict.get(self.cur_token.typ, lambda: None)()
+        return parse_typ_dict.get(self.cur_token.typ, self.parse_expression_statement)()
 
     def parse_let_statement(self):
         statement = ast.LetStatement(token=self.cur_token)
@@ -60,6 +104,63 @@ class Parser:
 
         return statement
 
+    def parse_expression_statement(self):
+        statement = ast.ExpressionStatement(token=self.cur_token)
+        statement.expression = self.parse_expression(LOWEST)
+        if self.peek_token_is(tokens.SEMICOLON):
+            self.next_token()
+        return statement
+
+    def parse_expression(self, precedence: int):
+        prefix = self.prefix_parse_functions.get(self.cur_token.typ)
+        if prefix is None:
+            self.no_prefix_parse_function(self.cur_token.typ)
+            return None
+        left_exp = prefix()
+        while not self.peek_token_is(tokens.SEMICOLON) and precedence < self.peek_precedence():
+            infix = self.infix_parse_functions.get(self.peek_token.typ)
+            if infix is None:
+                return left_exp
+            self.next_token()
+            left_exp = infix(left_exp)
+        return left_exp
+
+    def no_prefix_parse_function(self, t: tokens.TokenType):
+        self.errors.append(f"no prefix parse function for {t} found")
+
+    def parse_identifier(self) -> ast.Expression:
+        return ast.Identifier(token=self.cur_token, value=self.cur_token.literal)
+
+    def parse_integer_literal(self) -> ast.Expression:
+        lit = ast.IntegerLiteral(token=self.cur_token)
+        try:
+            value = int(self.cur_token.literal)
+        except BaseException as e:
+            self.errors.append(str(e))
+            return None
+        lit.value = value
+        return lit
+
+    def parse_prefix_expression(self) -> ast.Expression:
+        expression = ast.PrefixExpression(
+            token=self.cur_token,
+            operator=self.cur_token.literal
+        )
+        self.next_token()
+        expression.right = self.parse_expression(PREFIX)
+        return expression
+
+    def parse_infix_expression(self, left: ast.Expression) -> ast.Expression:
+        expression = ast.InfixExpression(
+            token=self.cur_token,
+            operator=self.cur_token.literal,
+            left=left
+        )
+        precedence = self.cur_precedence()
+        self.next_token()
+        expression.right = self.parse_expression(precedence)
+        return expression
+
     def cur_token_is(self, t: tokens.TokenType) -> bool:
         return self.cur_token.typ == t
 
@@ -78,3 +179,8 @@ class Parser:
         message = f"expected next token to be {t}, got {self.peek_token.typ} instead"
         self.errors.append(message)
 
+    def cur_precedence(self) -> int:
+        return precedences.get(self.cur_token.typ, LOWEST)
+
+    def peek_precedence(self) -> int:
+        return precedences.get(self.peek_token.typ, LOWEST)

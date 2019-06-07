@@ -18,7 +18,7 @@ class Statement(Node):
 @dataclass
 class Identifier(Expression):
     token: tokens.Token
-    value: str
+    value: str = None
 
     @property
     def token_literal(self):
@@ -26,6 +26,45 @@ class Identifier(Expression):
 
     def __str__(self):
         return self.value
+
+@dataclass
+class IntegerLiteral(Expression):
+    token: tokens.Token
+    value: int = None
+
+    @property
+    def token_literal(self):
+        return self.token.literal
+
+    def __str__(self):
+        return self.token.literal
+
+@dataclass
+class PrefixExpression(Expression):
+    token: tokens.Token
+    operator: str = None
+    right: Expression = None
+
+    @property
+    def token_literal(self):
+        return self.token.literal
+    
+    def __str__(self):
+        return f"({self.operator}{str(self.right)})"
+
+@dataclass
+class InfixExpression(Expression):
+    token: tokens.Token
+    left: Expression = None
+    operator: str = None
+    right: Expression = None
+
+    @property
+    def token_literal(self):
+        return self.token.literal
+
+    def __str__(self):
+        return f"({str(self.left)}{self.operator}{str(self.right)})"
 
 @dataclass
 class LetStatement(Statement):
