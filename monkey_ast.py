@@ -11,9 +11,25 @@ class Expression(Node):
     def expression_node(self):
         raise NotImplementedError
 
+    @property
+    def token_literal(self):
+        return self.token.literal
+
 class Statement(Node):
     def statement_node(self):
         raise NotImplementedError
+
+@dataclass
+class BlockStatement(Node):
+    token: tokens.Token
+    statements: List[Statement] = None
+
+    @property
+    def token_literal(self):
+        return self.token.literal
+
+    def __str__(self):
+        return "".join([str(statement) for statement in (self.statements if self.statements is not None else [])])
 
 @dataclass
 class Identifier(Expression):
@@ -38,6 +54,50 @@ class IntegerLiteral(Expression):
 
     def __str__(self):
         return self.token.literal
+
+@dataclass
+class Boolean(Expression):
+    token: tokens.Token
+    value: bool = None
+
+    @property
+    def token_literal(self):
+        return self.token.literal
+
+    def __str__(self):
+        return self.token.literal
+
+@dataclass
+class IfExpression(Expression):
+    token: tokens.Token
+    condition: Expression = None
+    consequence: BlockStatement = None
+    alternative: BlockStatement = None
+
+    @property
+    def token_literal(self):
+        return self.token.literal
+
+    def __str__(self):
+        return f"if{str(self.condition)} {str(self.consequence)}"+(f"else {str(self.alternative)}" if self.alternative is not None else "")
+
+@dataclass
+class FunctionLiteral(Expression):
+    token: tokens.Token
+    parameters: List[Identifier] = None
+    body: BlockStatement = None
+
+    def __str__(self):
+        return f"{self.token_literal}({','.join([str(param) for param in (self.parameters if self.parameters is not None else [])])}){str(self.body)}"
+
+@dataclass
+class CallExpression(Expression):
+    token: tokens.Token
+    function: Expression = None
+    arguments: List[Expression] = None
+
+    def __str__(self):
+        return f"{str(self.function)}({', '.join([str(arg) for arg in (self.arguments if arguments is not None else [])])})"
 
 @dataclass
 class PrefixExpression(Expression):
