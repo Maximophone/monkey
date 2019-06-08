@@ -26,8 +26,9 @@ def eval_test(input: str) -> MonkeyObject:
     l = lexer.Lexer(input)
     p = parser.Parser(l)
     program = p.parse_program()
+    env = mobject.Environment()
 
-    return evaluator.eval(program)
+    return evaluator.eval(program, env)
 
 def integer_object_test(obj: MonkeyObject, expected: int):
     assert isinstance(obj, mobject.Integer), f"object is not Integer. got {type(obj)}"
@@ -126,9 +127,21 @@ def test_error_handling():
         ("true + false", "unknown operator: BOOLEAN + BOOLEAN"),
         ("5; true + false; 5;", "unknown operator: BOOLEAN + BOOLEAN"),
         ("if(10>1){true+false;}", "unknown operator: BOOLEAN + BOOLEAN"),
+        ("foobar", "identifier not found: foobar")
     ]
 
     for input, expected in tests:
         evaluated: mobject.Error = eval_test(input)
         assert isinstance(evaluated, mobject.Error), f"no error object returned. got {type(evaluated)}"
         assert evaluated.message == expected, f"wrong error message. expected '{expected}', got '{evaluated.message}'"
+
+def test_let_statements():
+    tests = [
+        ("let a = 5; a;", 5),
+        ("let a = 5*5; a;", 25),
+        ("let a = 5; let b = a; b;", 5),
+        ("let a=5; let b=a; let c=a + b + 5; c;", 15),
+    ]
+
+    for input, expected in tests:
+        integer_object_test(eval_test(input), expected)

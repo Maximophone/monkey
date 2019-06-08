@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Dict
 
 INTEGER_OBJ = "INTEGER"
 BOOLEAN_OBJ = "BOOLEAN"
@@ -76,3 +77,14 @@ class Error(MonkeyObject):
     @property
     def inspect(self) -> str:
         return f"ERROR: {self.message}"
+
+@dataclass
+class Environment:
+    store: Dict[str, MonkeyObject] = field(default_factory=lambda: {})
+
+    def get(self, name:str) -> MonkeyObject:
+        return self.store.get(name)
+
+    def set(self, name:str, val: MonkeyObject) -> MonkeyObject:
+        self.store[name] = val
+        return val

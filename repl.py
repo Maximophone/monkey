@@ -2,12 +2,14 @@ import lexer
 import parser
 import tokens
 import evaluator
+import monkey_object as mobject
 
 from typing import List
 
 PROMPT = ">>"
 
 def start():
+    env = mobject.Environment()
     while True:
         print(PROMPT)
         line = input()
@@ -22,7 +24,7 @@ def start():
             print_parser_errors(p.errors)
             continue
 
-        evaluated = evaluator.eval(program)
+        evaluated = evaluator.eval(program, env)
         if evaluated is not None:
             print(evaluated.inspect)
 
