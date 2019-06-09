@@ -145,3 +145,33 @@ def test_let_statements():
 
     for input, expected in tests:
         integer_object_test(eval_test(input), expected)
+
+def test_function_object():
+    input = "fn(x){x+2;};"
+    expected_body="(x+2)"
+    fn: mobject.Function = eval_test(input)
+
+    assert isinstance(fn, mobject.Function), f"object is not Function. got {type(fn)}"
+    assert len(fn.parameters) == 1, f"function has wrong number of parameters. parameters = {fn.parameters}"
+    assert str(fn.parameters[0]) == "x", f"parameter is not x. got {fn.parameters[0]}"
+    assert str(fn.body) == expected_body, f"body is not {expected_body}. got {fn.body}"
+
+def test_function_application():
+    tests = [
+        ("let identity = fn(x){x;}; identity(5);", 5),
+        ("let identity = fn(x){return x;}; identity(5);", 5),
+        ("let double = fn(x){x*2;}; double(5);", 10),
+        ("let add = fn(x, y){x + y}; add(5, 2);", 7),
+    ]
+    for input, expected in tests:
+        integer_object_test(eval_test(input), expected)
+
+def test_closures():
+    input = """
+    let newadder = fn(x) {
+        fn(y){x + y};
+    };
+    let addtwo = newadder(2);
+    addtwo(2);
+    """
+    integer_object_test(eval_test(input), 4)

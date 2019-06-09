@@ -1,11 +1,14 @@
+import monkey_ast as ast
+
 from dataclasses import dataclass, field
-from typing import Dict
+from typing import Dict, List
 
 INTEGER_OBJ = "INTEGER"
 BOOLEAN_OBJ = "BOOLEAN"
 NULL_OBJ = "NULL"
 RETURN_VALUE_OBJ = "RETURN_VALUE"
 ERROR_OBJ = "ERROR"
+FUNCTION_OBJ = "FUNCTION"
 
 class ObjectType(str):
     pass
@@ -81,10 +84,38 @@ class Error(MonkeyObject):
 @dataclass
 class Environment:
     store: Dict[str, MonkeyObject] = field(default_factory=lambda: {})
+    outer: "Environment" = None
 
     def get(self, name:str) -> MonkeyObject:
-        return self.store.get(name)
+        obj = self.store.get(name)
+        if obj is None and self.outer is not None:
+            return self.outer.get(name)
+        return obj
 
     def set(self, name:str, val: MonkeyObject) -> MonkeyObject:
         self.store[name] = val
         return val
+
+    @staticmethod
+    def new_enclosed(outer) -> "Environment":
+        env = Environment()
+        env.outer = outer
+        return env
+
+    
+
+@dataclass
+class Function(MonkeyObject):
+    parameters: List[ast.Identifier]
+    body: ast.BlockStatement
+    env: Environment
+
+    @property
+    def typ(self) -> ObjectType:
+        return FUNCTION_OBJ
+
+    @property
+    def inspect(self) -> str:
+        params_str = ','.join([str(param) for param in self.parameters]) if self.parameters is not None else ''
+        body_str = str(self.body) if self.body is not None else ''
+        return f"fn({params_str}){body_str}"

@@ -47,6 +47,18 @@ def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
         if is_error(val):
             return val
         env.set(node.name.value, val)
+    elif typ == ast.FunctionLiteral:
+        params = node.parameters
+        body = node.body
+        return mobject.Function(parameters=params, body=body, env=env)
+    elif typ == ast.CallExpression:
+        function = eval(node.function, env)
+        if is_error(function):
+            return function
+        args = eval_expressions(node.arguments, env)
+        if len(args) == 1 and is_error(args[0]):
+            return args[0]
+        return apply_function(function, args)
     else:
         return NULL
 
@@ -71,6 +83,15 @@ def eval_block_statement(block: ast.BlockStatement, env: mobject.Environment) ->
         result = eval(statement, env)
         if result is not None and (result.typ == mobject.RETURN_VALUE_OBJ or result.typ == mobject.ERROR_OBJ):
             return result
+    return result
+
+def eval_expressions(exps: List[ast.Expression], env: mobject.Environment) -> List[MonkeyObject]:
+    result: List[MonkeyObject] = []
+    for exp in exps:
+        evaluated = eval(exp, env)
+        if is_error(evaluated):
+            return [evaluated]
+        result.append(evaluated)
     return result
 
 def eval_identifier(node: ast.Identifier, env: mobject.Environment) -> MonkeyObject:
@@ -167,3 +188,21 @@ def is_error(obj: MonkeyObject) -> bool:
     if obj is not None:
         return obj.typ == mobject.ERROR_OBJ
     return False
+
+def apply_function(fn: MonkeyObject, args: List[MonkeyObject]) -> MonkeyObject:
+    if not isinstance(fn, mobject.Function):
+        return new_error("not a function: {}", fn.typ)
+    extended_env = extend_function_env(fn, args)
+    evaluated = eval(fn.body, extended_env)
+    return unwrap_return_value(evaluated)
+
+def extend_function_env(fn: mobject.Function, args: List[MonkeyObject]) -> mobject.Environment:
+    env = mobject.Environment.new_enclosed(fn.env)
+    for i, param in enumerate(fn.parameters):
+        env.set(param.value, args[i])
+    return env
+
+def unwrap_return_value(obj: MonkeyObject) -> MonkeyObject:
+    if isinstance(obj, mobject.ReturnValue):
+        return obj.value
+    return obj
