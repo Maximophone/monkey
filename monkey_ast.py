@@ -68,6 +68,14 @@ class Boolean(Expression):
         return self.token.literal
 
 @dataclass
+class StringLiteral(Expression):
+    token: tokens.Token
+    value: str = None
+
+    def __str__(self):
+        return self.token_literal
+
+@dataclass
 class IfExpression(Expression):
     token: tokens.Token
     condition: Expression = None

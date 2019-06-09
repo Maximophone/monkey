@@ -20,6 +20,8 @@ def test_next_token():
     }
 
     a_b;
+    "foobar"
+    "foo bar"
     """
 
     tests = [
@@ -96,7 +98,12 @@ def test_next_token():
         (tokens.RBRACE, "}"),
 
         (tokens.IDENT, "a_b"),
+        (tokens.SEMICOLON, ";"),
 
+        (tokens.STRING, "foobar"),
+        (tokens.STRING, "foo bar"),
+
+        (tokens.EOF, ""),
     ]
 
     l = Lexer(input)

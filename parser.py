@@ -35,6 +35,7 @@ class Parser:
         self.prefix_parse_functions: Dict[tokens.TokenType, Callable] = {
             tokens.IDENT: self.parse_identifier,
             tokens.INT: self.parse_integer_literal,
+            tokens.STRING: self.parse_string_literal,
             tokens.TRUE: self.parse_boolean,
             tokens.FALSE: self.parse_boolean,
             tokens.BANG: self.parse_prefix_expression,
@@ -156,6 +157,12 @@ class Parser:
         return ast.Boolean(
             token=self.cur_token,
             value=self.cur_token_is(tokens.TRUE)
+        )
+
+    def parse_string_literal(self) -> ast.Expression:
+        return ast.StringLiteral(
+            token=self.cur_token,
+            value=self.cur_token.literal
         )
 
     def parse_if_expression(self) -> ast.Expression:

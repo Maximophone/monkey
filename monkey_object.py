@@ -5,6 +5,7 @@ from typing import Dict, List
 
 INTEGER_OBJ = "INTEGER"
 BOOLEAN_OBJ = "BOOLEAN"
+STRING_OBJ = "STRING"
 NULL_OBJ = "NULL"
 RETURN_VALUE_OBJ = "RETURN_VALUE"
 ERROR_OBJ = "ERROR"
@@ -46,6 +47,18 @@ class Boolean(MonkeyObject):
     @property
     def inspect(self) -> str:
         return str(self.value).lower()
+
+@dataclass
+class String(MonkeyObject):
+    value: str
+
+    @property
+    def typ(self) -> ObjectType:
+        return STRING_OBJ
+
+    @property
+    def inspect(self) -> str:
+        return self.value
 
 class Null(MonkeyObject):
 

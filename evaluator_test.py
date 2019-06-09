@@ -34,6 +34,10 @@ def integer_object_test(obj: MonkeyObject, expected: int):
     assert isinstance(obj, mobject.Integer), f"object is not Integer. got {type(obj)}"
     assert obj.value == expected, f"object has the wrong value. got {obj.value}, wanted {expected}"
 
+def string_object_test(obj: MonkeyObject, expected: str):
+    assert isinstance(obj, mobject.String), f"object is not String. got {type(obj)}"
+    assert obj.value == expected, f"object has the wrong value. got {obj.value}, wanted {expected}"
+
 def test_eval_boolean_expression():
     tests = [
         ("true", True),
@@ -127,7 +131,8 @@ def test_error_handling():
         ("true + false", "unknown operator: BOOLEAN + BOOLEAN"),
         ("5; true + false; 5;", "unknown operator: BOOLEAN + BOOLEAN"),
         ("if(10>1){true+false;}", "unknown operator: BOOLEAN + BOOLEAN"),
-        ("foobar", "identifier not found: foobar")
+        ("foobar", "identifier not found: foobar"),
+        ('"hello" - "world"', "unknown operator: STRING - STRING")
     ]
 
     for input, expected in tests:
@@ -175,3 +180,16 @@ def test_closures():
     add_two(2);
     """
     integer_object_test(eval_test(input), 4)
+
+def test_string_literal():
+    input = '"Hello World!"'
+    evaluated = eval_test(input)
+
+    assert isinstance(evaluated, mobject.String), f"object is not String. got {type(evaluated)}"
+    assert evaluated.value == "Hello World!", f"String has wrong value. got {evaluated.value}"
+
+def test_string_concatenation():
+    input = '"Hello " + "World!"'
+    string = eval_test(input)
+
+    string_object_test(string, "Hello World!")

@@ -48,6 +48,9 @@ class Lexer:
         elif self.ch!=0 and self.ch.isdigit():
             literal = self.read_number()
             tok = Token(tokens.INT, literal)
+        elif self.ch!=0 and self.ch == '"':
+            tok = Token(tokens.STRING, self.read_string())
+            self.read_char()
         else:
             if self.ch in tokens.peeking:
                 next_ch = self.peek_char()
@@ -59,6 +62,14 @@ class Lexer:
             tok = tokens.token_ch_dict.get(self.ch, Token(tokens.ILLEGAL, self.ch))
             self.read_char()
         return tok
+
+    def read_string(self) -> str:
+        position = self.position + 1
+        while True:
+            self.read_char()
+            if self.ch=='"':
+                break
+        return self.input[position:self.position]
 
 def is_alpha(char: str) -> bool:
     return char.isalpha() or char=="_"

@@ -379,3 +379,15 @@ def test_call_expression_parsing():
     literal_expression_test(exp.arguments[0], 1)
     infix_expression_test(exp.arguments[1], 2, "*", 3)
     infix_expression_test(exp.arguments[2], 4, "+", 5)
+
+def test_string_literal_expression():
+    input = '"Hello world";'
+    program = get_program(input, 1)
+
+    statement = program.statements[0]
+    check_statement(statement, ast.ExpressionStatement)
+
+    literal = statement.expression
+    check_expression(literal, ast.StringLiteral)
+
+    assert literal.value == "Hello world", f"literal.value not 'Hello world'. got {literal.value}"

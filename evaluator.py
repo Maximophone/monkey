@@ -18,6 +18,8 @@ def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
         return mobject.Integer(value=node.value)
     elif typ == ast.Boolean:
         return native_bool_to_boolean_object(node.value)
+    elif typ == ast.StringLiteral:
+        return mobject.String(value=node.value)
     elif typ == ast.Identifier:
         return eval_identifier(node, env)
     elif typ == ast.PrefixExpression:
@@ -137,6 +139,8 @@ def eval_infix_expression(operator: str, left: MonkeyObject, right: MonkeyObject
             return native_bool_to_boolean_object(left != right)
         else:
             return new_error("unknown operator: {} {} {}", left.typ, operator, right.typ)
+    elif left.typ == mobject.STRING_OBJ and right.typ == mobject.STRING_OBJ:
+        return eval_string_infix_expression(operator, left, right)
     else:
         return new_error("type mismatch: {} {} {}", left.typ, operator, right.typ)
 
@@ -159,6 +163,11 @@ def eval_integer_infix_expression(operator: str, left: MonkeyObject, right: Monk
         return native_bool_to_boolean_object(left.value == right.value)
     else:
         return new_error("unknown operator: {} {} {}", left.typ, operator, right.typ)
+
+def eval_string_infix_expression(operator: str, left: MonkeyObject, right: MonkeyObject) -> MonkeyObject:
+    if operator != "+":
+        return new_error("unknown operator: {} {} {}", left.typ, operator, right.typ)
+    return mobject.String(value=left.value + right.value)
 
 def eval_if_expression(exp: ast.IfExpression, env: mobject.Environment) -> MonkeyObject:
     condition = eval(exp.condition, env)
