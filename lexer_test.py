@@ -18,6 +18,8 @@ def test_next_token():
     } else {
         return false;
     }
+
+    a_b;
     """
 
     tests = [
@@ -92,6 +94,8 @@ def test_next_token():
         (tokens.FALSE, "false"),
         (tokens.SEMICOLON, ";"),
         (tokens.RBRACE, "}"),
+
+        (tokens.IDENT, "a_b"),
 
     ]
 

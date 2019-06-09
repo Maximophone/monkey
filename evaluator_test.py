@@ -168,10 +168,10 @@ def test_function_application():
 
 def test_closures():
     input = """
-    let newadder = fn(x) {
+    let new_adder = fn(x) {
         fn(y){x + y};
     };
-    let addtwo = newadder(2);
-    addtwo(2);
+    let add_two = new_adder(2);
+    add_two(2);
     """
     integer_object_test(eval_test(input), 4)

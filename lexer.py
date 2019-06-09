@@ -20,7 +20,7 @@ class Lexer:
 
     def read_identifier(self):
         position = self.position
-        while self.ch!=0 and self.ch.isalpha():
+        while self.ch!=0 and is_alpha(self.ch):
             self.read_char()
         return self.input[position:self.position]
 
@@ -42,7 +42,7 @@ class Lexer:
         while self.ch!=0 and self.ch.isspace():
             self.read_char()
 
-        if self.ch!=0 and self.ch.isalpha():
+        if self.ch!=0 and is_alpha(self.ch):
             literal = self.read_identifier()
             tok = tokens.token_alpha_dict.get(literal, Token(tokens.IDENT, literal))
         elif self.ch!=0 and self.ch.isdigit():
@@ -59,3 +59,6 @@ class Lexer:
             tok = tokens.token_ch_dict.get(self.ch, Token(tokens.ILLEGAL, self.ch))
             self.read_char()
         return tok
+
+def is_alpha(char: str) -> bool:
+    return char.isalpha() or char=="_"
