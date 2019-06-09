@@ -7,7 +7,6 @@ from evaluator_utils import new_error, is_error
 from typing import List
 
 
-
 def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
     typ = type(node)
     if typ == ast.Program:
@@ -61,6 +60,19 @@ def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
         if len(args) == 1 and is_error(args[0]):
             return args[0]
         return apply_function(function, args)
+    elif typ == ast.ArrayLiteral:
+        elements = eval_expressions(node.elements, env)
+        if len(elements) == 1 and is_error(elements[0]):
+            return elements[0]
+        return mobject.Array(elements=elements)
+    elif typ == ast.IndexExpression:
+        left = eval(node.left, env)
+        if is_error(left):
+            return left
+        index = eval(node.index, env)
+        if is_error(index):
+            return index
+        return eval_index_expression(left, index)
     else:
         return NULL
 
@@ -95,6 +107,19 @@ def eval_expressions(exps: List[ast.Expression], env: mobject.Environment) -> Li
             return [evaluated]
         result.append(evaluated)
     return result
+
+def eval_index_expression(left: MonkeyObject, index: MonkeyObject) -> MonkeyObject:
+    if left.typ == mobject.ARRAY_OBJ and index.typ == mobject.INTEGER_OBJ:
+        return eval_array_index_expression(left, index)
+    else:
+        return new_error("index operator not supported: {}", left.typ)
+
+def eval_array_index_expression(left: mobject.Array, index: mobject.Integer) -> MonkeyObject:
+    idx = index.value
+    max_idx = len(left.elements) - 1
+    if idx < 0 or idx > max_idx:
+        return NULL
+    return left.elements[idx]
 
 def eval_identifier(node: ast.Identifier, env: mobject.Environment) -> MonkeyObject:
     val = env.get(node.value)

@@ -76,6 +76,23 @@ class StringLiteral(Expression):
         return self.token_literal
 
 @dataclass
+class ArrayLiteral(Expression):
+    token: tokens.Token
+    elements: List[Expression] = None
+
+    def __str__(self):
+        return f"[{','.join([str(el) for el in self.elements])}]" if self.elements is not None else "[]"
+
+@dataclass
+class IndexExpression(Expression):
+    token: tokens.Token
+    left: Expression = None
+    index: Expression = None
+
+    def __str__(self):
+        return f"({str(self.left)}[{str(self.index)}])"
+
+@dataclass
 class IfExpression(Expression):
     token: tokens.Token
     condition: Expression = None
@@ -105,7 +122,7 @@ class CallExpression(Expression):
     arguments: List[Expression] = None
 
     def __str__(self):
-        return f"{str(self.function)}({', '.join([str(arg) for arg in (self.arguments if arguments is not None else [])])})"
+        return f"{str(self.function)}({','.join([str(arg) for arg in (self.arguments if self.arguments is not None else [])])})"
 
 @dataclass
 class PrefixExpression(Expression):

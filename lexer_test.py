@@ -22,6 +22,7 @@ def test_next_token():
     a_b;
     "foobar"
     "foo bar"
+    [1, 2];
     """
 
     tests = [
@@ -102,6 +103,13 @@ def test_next_token():
 
         (tokens.STRING, "foobar"),
         (tokens.STRING, "foo bar"),
+
+        (tokens.LBRACKET, "["),
+        (tokens.INT, "1"),
+        (tokens.COMMA, ","),
+        (tokens.INT, "2"),
+        (tokens.RBRACKET, "]"),
+        (tokens.SEMICOLON, ";"),
 
         (tokens.EOF, ""),
     ]

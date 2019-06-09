@@ -261,6 +261,14 @@ def test_operator_precedence_parsing():
         [
             "!(true == true)",
             "(!(true==true))"
+        ],
+        [
+            "a*[1, 2, 3][b*c]*d",
+            "((a*([1,2,3][(b*c)]))*d)"
+        ],
+        [
+            "add(a*b[2], b[1], 2*[1,2][1])",
+            "add((a*(b[2])),(b[1]),(2*([1,2][1])))"
         ]
     ]
 
@@ -391,3 +399,31 @@ def test_string_literal_expression():
     check_expression(literal, ast.StringLiteral)
 
     assert literal.value == "Hello world", f"literal.value not 'Hello world'. got {literal.value}"
+
+def test_parsing_array_literals():
+    input = "[1, 2*2, 3+3]"
+    program = get_program(input, 1)
+
+    statement = program.statements[0]
+    check_statement(statement, ast.ExpressionStatement)
+
+    array = statement.expression
+    check_expression(array, ast.ArrayLiteral)
+    assert len(array.elements) == 3, f"len(array.elements) is not 3. got {len(array.elements)}"
+
+    integer_literal_test(array.elements[0], 1)
+    infix_expression_test(array.elements[1], 2, "*", 2)
+    infix_expression_test(array.elements[2], 3, "+", 3)
+
+def test_parsing_index_expressions():
+    input = "my_array[1 + 1]"
+    program = get_program(input, 1)
+
+    statement = program.statements[0]
+    check_statement(statement, ast.ExpressionStatement)
+
+    index = statement.expression
+    check_expression(index, ast.IndexExpression)
+
+    identifier_test(index.left, "my_array")
+    infix_expression_test(index.index, 1, "+", 1)

@@ -11,6 +11,7 @@ SUM = 4
 PRODUCT = 5
 PREFIX = 6
 CALL = 7
+INDEX = 8
 
 precedences = {
     tokens.EQ: EQUALS,
@@ -21,7 +22,8 @@ precedences = {
     tokens.MINUS: SUM,
     tokens.SLASH: PRODUCT,
     tokens.ASTERISK: PRODUCT,
-    tokens.LPAREN: CALL
+    tokens.LPAREN: CALL,
+    tokens.LBRACKET: INDEX
 }
 
 class Parser:
@@ -43,6 +45,7 @@ class Parser:
             tokens.LPAREN: self.parse_grouped_expression,
             tokens.IF: self.parse_if_expression,
             tokens.FUNCTION: self.parse_function_literal,
+            tokens.LBRACKET: self.parse_array_literal,
         }
         self.infix_parse_functions: Dict[tokens.TokenType, Callable] = {
             tokens.PLUS: self.parse_infix_expression,
@@ -54,6 +57,7 @@ class Parser:
             tokens.LT: self.parse_infix_expression,
             tokens.GT: self.parse_infix_expression,
             tokens.LPAREN: self.parse_call_expression,
+            tokens.LBRACKET: self.parse_index_expression,
         }
 
         self.next_token()
@@ -165,6 +169,11 @@ class Parser:
             value=self.cur_token.literal
         )
 
+    def parse_array_literal(self) -> ast.Expression:
+        array = ast.ArrayLiteral(token=self.cur_token)
+        array.elements = self.parse_expression_list(tokens.RBRACKET)
+        return array
+
     def parse_if_expression(self) -> ast.Expression:
         exp = ast.IfExpression(token=self.cur_token)
 
@@ -252,13 +261,24 @@ class Parser:
             token=self.cur_token,
             function=function
         )
-        exp.arguments = self.parse_call_arguments()
+        exp.arguments = self.parse_expression_list(tokens.RPAREN)
         return exp
 
-    def parse_call_arguments(self) -> List[ast.Expression]:
+    def parse_index_expression(self, left: ast.Expression) -> ast.Expression:
+        exp = ast.IndexExpression(
+            token = self.cur_token,
+            left = left
+        )
+        self.next_token()
+        exp.index = self.parse_expression(LOWEST)
+        if not self.expect_peek(tokens.RBRACKET):
+            return None
+        return exp
+
+    def parse_expression_list(self, end: tokens.TokenType) -> List[ast.Expression]:
         args: List[ast.Expression] = []
 
-        if self.peek_token_is(tokens.RPAREN):
+        if self.peek_token_is(end):
             self.next_token()
             return args
 
@@ -270,7 +290,7 @@ class Parser:
             self.next_token()
             args.append(self.parse_expression(LOWEST))
 
-        if not self.expect_peek(tokens.RPAREN):
+        if not self.expect_peek(end):
             return None
 
         return args

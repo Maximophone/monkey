@@ -11,6 +11,7 @@ RETURN_VALUE_OBJ = "RETURN_VALUE"
 ERROR_OBJ = "ERROR"
 FUNCTION_OBJ = "FUNCTION"
 BUILTIN_OBJ = "BUILTIN"
+ARRAY_OBJ = "ARRAY"
 
 class ObjectType(str):
     pass
@@ -60,6 +61,18 @@ class String(MonkeyObject):
     @property
     def inspect(self) -> str:
         return self.value
+
+@dataclass
+class Array(MonkeyObject):
+    elements: List[MonkeyObject]
+
+    @property
+    def typ(self) -> ObjectType:
+        return ARRAY_OBJ
+    
+    @property
+    def inspect(self) -> str:
+        return f"[{', '.join([el.inspect for el in self.elements])}]" if self.elements else "[]"
 
 class Null(MonkeyObject):
 

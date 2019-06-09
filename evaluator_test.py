@@ -205,7 +205,13 @@ def test_builtin_functions():
         ('len("four")', 4),
         ('len("hello world")', 11),
         ('len(1)', "argument to 'len' not supported, got INTEGER"),
-        ('len("one", "two")', "wrong number of arguments. got 2, want 1")
+        ('len("one", "two")', "wrong number of arguments. got 2, want 1"),
+        ('len([1, 2, 3])', 3),
+        ('let a = [1, 2]; len(a);', 2),
+        ('first([1,2])', 1),
+        ('last([1,2,3])', 3),
+        ('rest([1, 2, 3])', (2, 3)),
+        ('push([1,2], 3)', (1, 2, 3)),
     ]
 
     for input, expected in tests:
@@ -214,3 +220,36 @@ def test_builtin_functions():
             integer_object_test(evaluated, expected)
         elif type(expected) == str:
             error_test(evaluated, expected)
+        elif type(expected) == tuple:
+            assert type(evaluated) == mobject.Array, f"object is not Array. got {type(evaluated)}"
+            for i, exp in enumerate(expected):
+                integer_object_test(evaluated.elements[i], exp)
+
+def test_array_literal():
+    input = "[1, 2*2, 3+3]"
+    evaluated = eval_test(input)
+
+    assert type(evaluated) == mobject.Array, f"object is not Array. got {type(evaluated)}"
+    assert len(evaluated.elements) == 3, f"array has wrong number of elements. got {len(evaluated.elements)}"
+    integer_object_test(evaluated.elements[0], 1)
+    integer_object_test(evaluated.elements[1], 4)
+    integer_object_test(evaluated.elements[2], 6)
+
+def test_array_index_expressions():
+    tests = [
+        ("[1, 2, 3][0]", 1),
+        ("[1, 2, 3][1]", 2),
+        ("[1, 3, 8][2]", 8),
+        ("let i = 0; [1][i]", 1),
+        ("[1, 2, 3][1+1]", 3),
+        ("let my_array = [1, 2, 3]; my_array[2]", 3),
+        ("[1, 2, 3][3]", None),
+        ("[1, 2, 3][-1]", None),
+    ]
+
+    for input, expected in tests:
+        evaluated = eval_test(input)
+        if type(expected) == int:
+            integer_object_test(evaluated, expected)
+        else:
+            null_object_test(evaluated)

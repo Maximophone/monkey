@@ -36,6 +36,8 @@ LPAREN = "("
 RPAREN = ")"
 LBRACE = "{"
 RBRACE = "}"
+LBRACKET = "["
+RBRACKET = "]"
 
 FUNCTION = "FUNCTION"
 LET = "LET"
@@ -61,6 +63,8 @@ token_ch_dict = {
     "/": Token(SLASH, "/"),
     "<": Token(LT, "<"),
     ">": Token(GT, ">"),
+    "[": Token(LBRACKET, "["),
+    "]": Token(RBRACKET, "]"),
     0: Token(EOF, ""),
 }
 
