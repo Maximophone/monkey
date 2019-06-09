@@ -1,7 +1,7 @@
 import monkey_ast as ast
 
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Callable
 
 INTEGER_OBJ = "INTEGER"
 BOOLEAN_OBJ = "BOOLEAN"
@@ -10,6 +10,7 @@ NULL_OBJ = "NULL"
 RETURN_VALUE_OBJ = "RETURN_VALUE"
 ERROR_OBJ = "ERROR"
 FUNCTION_OBJ = "FUNCTION"
+BUILTIN_OBJ = "BUILTIN"
 
 class ObjectType(str):
     pass
@@ -115,8 +116,6 @@ class Environment:
         env.outer = outer
         return env
 
-    
-
 @dataclass
 class Function(MonkeyObject):
     parameters: List[ast.Identifier]
@@ -132,3 +131,19 @@ class Function(MonkeyObject):
         params_str = ','.join([str(param) for param in self.parameters]) if self.parameters is not None else ''
         body_str = str(self.body) if self.body is not None else ''
         return f"fn({params_str}){body_str}"
+
+@dataclass
+class Builtin(MonkeyObject):
+    fn: Callable
+
+    @property
+    def typ(self) -> ObjectType:
+        return BUILTIN_OBJ
+
+    @property
+    def inspect(self) -> str:
+        return "builtin function"
+
+NULL = Null()
+TRUE = Boolean(value=True)
+FALSE = Boolean(value=False)

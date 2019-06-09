@@ -1,12 +1,12 @@
 import monkey_object as mobject
-from monkey_object import MonkeyObject
+from monkey_object import MonkeyObject, NULL, TRUE, FALSE
 import monkey_ast as ast
+from monkey_builtins import builtins
+from evaluator_utils import new_error, is_error
 
 from typing import List
 
-NULL = mobject.Null()
-TRUE = mobject.Boolean(value=True)
-FALSE = mobject.Boolean(value=False)
+
 
 def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
     typ = type(node)
@@ -98,9 +98,12 @@ def eval_expressions(exps: List[ast.Expression], env: mobject.Environment) -> Li
 
 def eval_identifier(node: ast.Identifier, env: mobject.Environment) -> MonkeyObject:
     val = env.get(node.value)
-    if val is None:
-        return new_error("identifier not found: {}", node.value)
-    return val
+    if val is not None:
+        return val
+    builtin = builtins.get(node.value)
+    if builtin is not None:
+        return builtin
+    return new_error("identifier not found: {}", node.value)
 
 def native_bool_to_boolean_object(value: bool) -> mobject.Boolean:
     return TRUE if value else FALSE
@@ -190,20 +193,15 @@ def is_truthy(obj: MonkeyObject) -> bool:
     else:
         return True
 
-def new_error(fmt: str, *args, **kwargs) -> mobject.Error:
-    return mobject.Error(fmt.format(*args, **kwargs))
-
-def is_error(obj: MonkeyObject) -> bool:
-    if obj is not None:
-        return obj.typ == mobject.ERROR_OBJ
-    return False
-
-def apply_function(fn: MonkeyObject, args: List[MonkeyObject]) -> MonkeyObject:
-    if not isinstance(fn, mobject.Function):
+def apply_function(fn: MonkeyObject, args: List[MonkeyObject]) -> MonkeyObject:  
+    if isinstance(fn, mobject.Function):
+        extended_env = extend_function_env(fn, args)
+        evaluated = eval(fn.body, extended_env)
+        return unwrap_return_value(evaluated)
+    elif isinstance(fn, mobject.Builtin):
+        return fn.fn(*args)
+    else:
         return new_error("not a function: {}", fn.typ)
-    extended_env = extend_function_env(fn, args)
-    evaluated = eval(fn.body, extended_env)
-    return unwrap_return_value(evaluated)
 
 def extend_function_env(fn: mobject.Function, args: List[MonkeyObject]) -> mobject.Environment:
     env = mobject.Environment.new_enclosed(fn.env)

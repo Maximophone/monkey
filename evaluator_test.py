@@ -137,8 +137,13 @@ def test_error_handling():
 
     for input, expected in tests:
         evaluated: mobject.Error = eval_test(input)
+        error_test(evaluated, expected)
         assert isinstance(evaluated, mobject.Error), f"no error object returned. got {type(evaluated)}"
         assert evaluated.message == expected, f"wrong error message. expected '{expected}', got '{evaluated.message}'"
+
+def error_test(obj: MonkeyObject, error_string: str):
+    assert isinstance(obj, mobject.Error), f"no error object returned. got {type(obj)}"
+    assert obj.message == error_string, f"wrong error message. expected '{error_string}', got '{obj.message}'"
 
 def test_let_statements():
     tests = [
@@ -193,3 +198,19 @@ def test_string_concatenation():
     string = eval_test(input)
 
     string_object_test(string, "Hello World!")
+
+def test_builtin_functions():
+    tests = [
+        ('len("")', 0),
+        ('len("four")', 4),
+        ('len("hello world")', 11),
+        ('len(1)', "argument to 'len' not supported, got INTEGER"),
+        ('len("one", "two")', "wrong number of arguments. got 2, want 1")
+    ]
+
+    for input, expected in tests:
+        evaluated = eval_test(input)
+        if type(expected) == int:
+            integer_object_test(evaluated, expected)
+        elif type(expected) == str:
+            error_test(evaluated, expected)
