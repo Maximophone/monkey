@@ -6,8 +6,14 @@ Example of program:
 
 ```
 # This is a comment.
-let hello = "Hello "; # basic types are be integers, booleans or strings
+let hello = "Hello "; # basic types are integers, booleans and strings
 let b = 3 + 5*2;
+
+# Also supports hashmaps and arrays
+let c = {
+    b: 8,
+    true: [1, 2, 3, 4],
+}
 
 # functions are first order objects
 let my_function = fn(c){
