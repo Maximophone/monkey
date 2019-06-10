@@ -8,7 +8,6 @@ def check_args_len(args, n) -> mobject.Error:
         return new_error("wrong number of arguments. got {}, want {}", len(args), n)
     return None
 
-
 def len_builtin(*args) -> mobject.Integer:
     err = check_args_len(args, 1)
     if err is not None:
@@ -92,6 +91,10 @@ def puts(*args):
     for arg in args:
         print(arg.value)
 
+@check_single_arg(mobject.INTEGER_OBJ)
+def range_(n: mobject.Integer) -> mobject.Array:
+    return mobject.Array(elements=[mobject.Integer(value=val) for val in range(n.value)])
+
 builtins: Dict[str, mobject.Builtin] = {
     "len": mobject.Builtin(
         fn=len_builtin
@@ -101,4 +104,5 @@ builtins: Dict[str, mobject.Builtin] = {
     "rest": mobject.Builtin(fn=rest),
     "push": mobject.Builtin(fn=push),
     "puts": mobject.Builtin(fn=puts),
+    "range": mobject.Builtin(fn=range_),
 }
