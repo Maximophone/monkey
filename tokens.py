@@ -47,6 +47,8 @@ FALSE = "FALSE"
 IF = "IF"
 ELSE = "ELSE"
 RETURN = "RETURN"
+FOR = "FOR"
+IN = "IN"
 
 
 token_ch_dict = {
@@ -83,6 +85,8 @@ token_alpha_dict = {
     "if": Token(IF, "if"),
     "else": Token(ELSE, "else"),
     "return": Token(RETURN, "return"),
+    "for": Token(FOR, "for"),
+    "in": Token(IN, "in"),
 }
 
 peeking = {

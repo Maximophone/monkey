@@ -30,6 +30,8 @@ def test_next_token():
     [1, 2];
 
     {5: 2};
+
+    for(x in v){};
     """
 
     tests = [
@@ -125,6 +127,16 @@ def test_next_token():
         (tokens.INT, "5"),
         (tokens.COLON, ":"),
         (tokens.INT, "2"),
+        (tokens.RBRACE, "}"),
+        (tokens.SEMICOLON, ";"),
+
+        (tokens.FOR, "for"),
+        (tokens.LPAREN, "("),
+        (tokens.IDENT, "x"),
+        (tokens.IN, "in"),
+        (tokens.IDENT, "v"),
+        (tokens.RPAREN, ")"),
+        (tokens.LBRACE, "{"),
         (tokens.RBRACE, "}"),
         (tokens.SEMICOLON, ";"),
 

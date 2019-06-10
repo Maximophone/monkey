@@ -47,6 +47,7 @@ class Parser:
             tokens.FUNCTION: self.parse_function_literal,
             tokens.LBRACKET: self.parse_array_literal,
             tokens.LBRACE: self.parse_hash_literal,
+            tokens.FOR: self.parse_for_expression,
         }
         self.infix_parse_functions: Dict[tokens.TokenType, Callable] = {
             tokens.PLUS: self.parse_infix_expression,
@@ -227,6 +228,37 @@ class Parser:
             exp.alternative = self.parse_block_statement()
 
         return exp
+
+    def parse_for_expression(self) -> ast.Expression:
+
+        if not self.expect_peek(tokens.LPAREN):
+            return None
+
+        self.next_token()
+
+        ident = ast.Identifier(token=self.cur_token, value=self.cur_token.literal)
+
+        if not self.expect_peek(tokens.IN):
+            return None
+
+        self.next_token()
+
+        iterator = self.parse_expression(LOWEST)
+
+        if not self.expect_peek(tokens.RPAREN):
+            return None
+
+        if not self.expect_peek(tokens.LBRACE):
+            return None
+
+        body = self.parse_block_statement()
+
+        return ast.ForExpression(
+            token=self.cur_token,
+            iterator=iterator,
+            element=ident,
+            body=body
+        )
 
     def parse_block_statement(self) -> ast.BlockStatement:
         block = ast.BlockStatement(

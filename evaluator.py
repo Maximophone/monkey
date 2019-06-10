@@ -2,7 +2,7 @@ import monkey_object as mobject
 from monkey_object import MonkeyObject, NULL, TRUE, FALSE
 import monkey_ast as ast
 from monkey_builtins import builtins
-from evaluator_utils import new_error, is_error
+from evaluator_utils import new_error, is_error, is_return
 
 from typing import List, Dict
 
@@ -38,6 +38,8 @@ def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
         return eval_block_statement(node, env)
     elif typ == ast.IfExpression:
         return eval_if_expression(node, env)
+    elif typ == ast.ForExpression:
+        return eval_for_expression(node, env)
     elif typ == ast.ReturnStatement:
         val = eval(node.return_value, env)
         if is_error(val):
@@ -238,6 +240,18 @@ def eval_if_expression(exp: ast.IfExpression, env: mobject.Environment) -> Monke
     else:
         return NULL
 
+def eval_for_expression(exp: ast.ForExpression, env: mobject.Environment) -> MonkeyObject:
+    iterator: mobject.Array = eval(exp.iterator, env)
+    if not iterator.typ == mobject.ARRAY_OBJ:
+        return new_error("iterator must be ARRAY. found {}", iterator.typ)
+    evaluated = NULL
+    for value in iterator.elements:
+        extended_env = extend_for_body_env(env, exp.element, value)
+        evaluated = eval(exp.body, extended_env)
+        if is_error(evaluated) or is_return(evaluated):
+            return evaluated
+    return evaluated
+
 def is_truthy(obj: MonkeyObject) -> bool:
     if obj == NULL:
         return False
@@ -265,6 +279,11 @@ def extend_function_env(fn: mobject.Function, args: List[MonkeyObject]) -> mobje
     for i, param in enumerate(fn.parameters):
         env.set(param.value, args[i])
     return env
+
+def extend_for_body_env(env: mobject.Environment, ident: ast.Identifier, value: MonkeyObject) -> mobject.Environment:
+    new_env = mobject.Environment.new_enclosed(env)
+    new_env.set(ident.value, value)
+    return new_env
 
 def unwrap_return_value(obj: MonkeyObject) -> MonkeyObject:
     if isinstance(obj, mobject.ReturnValue):

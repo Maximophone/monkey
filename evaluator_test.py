@@ -100,6 +100,19 @@ def test_if_else_expressions():
         else:
             null_object_test(evaluated)
 
+def test_for_expressions():
+    tests = [
+        ("for(x in []){1}", None),
+        ("for(x in [1,2,3]){x;}", 3),
+    ]
+
+    for input, expected in tests:
+        evaluated = eval_test(input)
+        if expected is not None:
+            integer_object_test(evaluated, expected)
+        else:
+            null_object_test(evaluated)
+
 def null_object_test(obj: MonkeyObject):
     return obj == evaluator.NULL
 
@@ -219,6 +232,9 @@ def test_builtin_functions():
         ('last([1,2,3])', 3),
         ('rest([1, 2, 3])', (2, 3)),
         ('push([1,2], 3)', (1, 2, 3)),
+        ('range(5)', (0, 1, 2, 3, 4)),
+        ('range(0)', ()),
+        ('range(-1)', ()),
     ]
 
     for input, expected in tests:

@@ -116,6 +116,16 @@ class IfExpression(Expression):
         return f"if{str(self.condition)} {str(self.consequence)}"+(f"else {str(self.alternative)}" if self.alternative is not None else "")
 
 @dataclass
+class ForExpression(Expression):
+    token: tokens.Token
+    iterator: Expression = None
+    element: Identifier = None
+    body: BlockStatement = None
+
+    def __str__(self):
+        return f"for({self.element} in {self.iterator})" + "{" + str(self.body) + "}"
+
+@dataclass
 class FunctionLiteral(Expression):
     token: tokens.Token
     parameters: List[Identifier] = None

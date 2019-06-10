@@ -489,3 +489,25 @@ def test_parsing_various_hash_literal():
         hash_lit = statement.expression
 
         check_hash_literal(hash_lit, expected)
+
+def test_parsing_for_expression():
+    input = """
+    for(x in range(2)){
+        x+3;
+    };
+    """
+
+    program = get_program(input, 1)
+    statement = program.statements[0]
+    check_statement(statement, ast.ExpressionStatement)
+
+    for_exp = statement.expression
+    check_expression(for_exp, ast.ForExpression)
+
+    iterator = for_exp.iterator
+    check_expression(iterator, ast.CallExpression)
+
+    element = for_exp.element
+    check_expression(element, ast.Identifier)
+
+    

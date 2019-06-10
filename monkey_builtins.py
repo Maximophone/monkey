@@ -8,6 +8,32 @@ def check_args_len(args, n) -> mobject.Error:
         return new_error("wrong number of arguments. got {}, want {}", len(args), n)
     return None
 
+def check_single_arg(typ):
+    def closure(f):
+        def inner(*args):
+            err = check_args_len(args, 1)
+            if err is not None:
+                return err
+            arg = args[0]
+            if arg.typ != typ:
+                return new_error("argument must be {}, got {}", typ, arg.typ)
+            return f(arg)
+        return inner
+    return closure
+
+def check_args(*typs):
+    def closure(f):
+        def inner(*args):
+            err = check_args_len(args, len(typs))
+            if err is not None:
+                return err
+            for arg, typ in zip(args, typs):
+                if typ is not None and arg.typ != typ:
+                    return new_error("wrong argument type")
+            return f(*args)
+        return inner
+    return closure
+
 def len_builtin(*args) -> mobject.Integer:
     err = check_args_len(args, 1)
     if err is not None:
@@ -54,40 +80,14 @@ def rest(*args) -> mobject.Array:
         )
     return NULL
 
-def check_single_arg(typ):
-    def closure(f):
-        def inner(*args):
-            err = check_args_len(args, 1)
-            if err is not None:
-                return err
-            arg = args[0]
-            if arg.typ != typ:
-                return new_error("argument must be {}, got {}", typ, arg.typ)
-            return f(arg)
-        return inner
-    return closure
-
-def check_args(*typs):
-    def closure(f):
-        def inner(*args):
-            err = check_args_len(args, len(typs))
-            if err is not None:
-                return err
-            for arg, typ in zip(args, typs):
-                if typ is not None and arg.typ != typ:
-                    return new_error("wrong argument type")
-            return f(*args)
-        return inner
-    return closure
-
 @check_args(mobject.ARRAY_OBJ, None)
 def push(array: mobject.Array, obj: MonkeyObject) -> mobject.Array:
     return mobject.Array(elements=array.elements+[obj])
 
 def puts(*args):
     for arg in args:
-        if arg.typ != mobject.STRING_OBJ:
-            return new_error("wrong argument type, 'puts' only takes STRING arguments but got {}", arg.typ)
+        if arg.typ not in (mobject.STRING_OBJ, mobject.INTEGER_OBJ, mobject.BOOLEAN_OBJ):
+            return new_error("wrong argument type, 'puts' does not accept {}", arg.typ)
     for arg in args:
         print(arg.value)
 
