@@ -4,7 +4,8 @@ import monkey_ast as ast
 from typing import List, Dict, Callable
 
 
-LOWEST = 1
+LOWEST = 0
+ASSIGN = 1
 EQUALS = 2
 LESSGREATER = 3
 SUM = 4
@@ -15,6 +16,7 @@ INDEX = 8
 
 precedences = {
     tokens.EQ: EQUALS,
+    tokens.ASSIGN: ASSIGN,
     tokens.NOT_EQ: EQUALS,
     tokens.LT: LESSGREATER,
     tokens.GT: LESSGREATER,
@@ -48,6 +50,7 @@ class Parser:
             tokens.LBRACKET: self.parse_array_literal,
             tokens.LBRACE: self.parse_hash_literal,
             tokens.FOR: self.parse_for_expression,
+            tokens.WHILE: self.parse_while_expression,
         }
         self.infix_parse_functions: Dict[tokens.TokenType, Callable] = {
             tokens.PLUS: self.parse_infix_expression,
@@ -60,6 +63,7 @@ class Parser:
             tokens.GT: self.parse_infix_expression,
             tokens.LPAREN: self.parse_call_expression,
             tokens.LBRACKET: self.parse_index_expression,
+            tokens.ASSIGN: self.parse_assign_expression,
         }
 
         self.next_token()
@@ -230,7 +234,7 @@ class Parser:
         return exp
 
     def parse_for_expression(self) -> ast.Expression:
-
+        cur_token = self.cur_token
         if not self.expect_peek(tokens.LPAREN):
             return None
 
@@ -254,10 +258,31 @@ class Parser:
         body = self.parse_block_statement()
 
         return ast.ForExpression(
-            token=self.cur_token,
+            token=cur_token,
             iterator=iterator,
             element=ident,
             body=body
+        )
+
+    def parse_while_expression(self) -> ast.Expression:
+        cur_token = self.cur_token
+        if not self.expect_peek(tokens.LPAREN):
+            return None
+        self.next_token()
+
+        condition = self.parse_expression(LOWEST)
+
+        if not self.expect_peek(tokens.RPAREN):
+            return None
+        if not self.expect_peek(tokens.LBRACE):
+            return None
+
+        body = self.parse_block_statement()
+
+        return ast.WhileExpression(
+            token = cur_token,
+            condition = condition,
+            body = body
         )
 
     def parse_block_statement(self) -> ast.BlockStatement:
@@ -372,6 +397,16 @@ class Parser:
         precedence = self.cur_precedence()
         self.next_token()
         expression.right = self.parse_expression(precedence)
+        return expression
+
+    def parse_assign_expression(self, left: ast.Expression) -> ast.Expression:
+        expression = ast.AssignExpression(
+            token=self.cur_token,
+            name=left
+        )
+        precedence = self.cur_precedence()
+        self.next_token()
+        expression.value = self.parse_expression(precedence)
         return expression
 
     def parse_grouped_expression(self) -> ast.Expression:

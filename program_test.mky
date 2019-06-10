@@ -33,37 +33,17 @@ factorial(10);
 
 while(96, fn(){});
 
-let digit_to_str = fn(digit){
-	if(digit==0){
-		return "0";
-	};
-	if(digit==1){
-		return "1";
-	};
-	if(digit==2){
-		return "2";
-	};
-	if(digit==3){
-		return "3";
-	}
-	if(digit==4){
-		return "4";
-	}
-	if(digit==5){
-		return "5";
-	}
-	if(digit==6){
-		return "6";
-	}
-	if(digit==7){
-		return "7";
-	}
-	if(digit==8){
-		return "8";
-	}
-	if(digit==9){
-		return "9";
-	}
+let digit_to_str = {
+	0: "0",
+	1: "1",
+	2: "2",
+	3: "3",
+	4: "4",
+	5: "5",
+	6: "6",
+	7: "7",
+	8: "8",
+	9: "9"
 };
 
 let mod = fn(a, b){
@@ -74,10 +54,14 @@ let int_to_str = fn(number){
 	let r = mod(number, 10);
 	let q = number/10;
 	if(q==0){
-		return digit_to_str(r);
+		return digit_to_str[r];
 	};
-	return int_to_str(q) + digit_to_str(r);
+	return int_to_str(q) + digit_to_str[r];
 }
 
-digit_to_str(2);
-int_to_str(108973498);
+puts(digit_to_str[2]);
+puts(int_to_str(108973498));
+
+for(x in range(5)){
+	puts(x);
+};

@@ -161,6 +161,15 @@ class Environment:
         self.store[name] = val
         return val
 
+    def reset(self, name:str, val: MonkeyObject) -> MonkeyObject:
+        exists = name in self.store
+        if exists:
+            return self.set(name, val)
+        if self.outer is not None:
+            return self.outer.reset(name, val)
+        elif self.outer is None:
+            return
+
     @staticmethod
     def new_enclosed(outer) -> "Environment":
         env = Environment()

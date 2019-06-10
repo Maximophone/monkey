@@ -49,6 +49,7 @@ ELSE = "ELSE"
 RETURN = "RETURN"
 FOR = "FOR"
 IN = "IN"
+WHILE = "WHILE"
 
 
 token_ch_dict = {
@@ -87,6 +88,7 @@ token_alpha_dict = {
     "return": Token(RETURN, "return"),
     "for": Token(FOR, "for"),
     "in": Token(IN, "in"),
+    "while": Token(WHILE, "while"),
 }
 
 peeking = {

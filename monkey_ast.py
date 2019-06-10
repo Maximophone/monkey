@@ -126,6 +126,12 @@ class ForExpression(Expression):
         return f"for({self.element} in {self.iterator})" + "{" + str(self.body) + "}"
 
 @dataclass
+class WhileExpression(Expression):
+    token: tokens.Token
+    condition: Expression = None
+    body: BlockStatement = None
+
+@dataclass
 class FunctionLiteral(Expression):
     token: tokens.Token
     parameters: List[Identifier] = None
@@ -169,6 +175,15 @@ class InfixExpression(Expression):
 
     def __str__(self):
         return f"({str(self.left)}{self.operator}{str(self.right)})"
+
+@dataclass
+class AssignExpression(Expression):
+    token: tokens.Token
+    name: Expression = None
+    value: Expression = None
+
+    def __str__(self):
+        return f"({self.name}={self.value})"
 
 @dataclass
 class LetStatement(Statement):

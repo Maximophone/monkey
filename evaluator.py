@@ -34,12 +34,22 @@ def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
         if is_error(right):
             return right
         return eval_infix_expression(node.operator, left, right)
+    elif typ == ast.AssignExpression:
+        value = eval(node.value, env)
+        if is_error(value):
+            return value
+        val = env.reset(node.name.value, value)
+        if val is None:
+            return new_error("variable '{}' does not exist. Can't reassign", node.name.value)
+        return val
     elif typ == ast.BlockStatement:
         return eval_block_statement(node, env)
     elif typ == ast.IfExpression:
         return eval_if_expression(node, env)
     elif typ == ast.ForExpression:
         return eval_for_expression(node, env)
+    elif typ == ast.WhileExpression:
+        return eval_while_expression(node, env)
     elif typ == ast.ReturnStatement:
         val = eval(node.return_value, env)
         if is_error(val):
@@ -251,6 +261,19 @@ def eval_for_expression(exp: ast.ForExpression, env: mobject.Environment) -> Mon
         if is_error(evaluated) or is_return(evaluated):
             return evaluated
     return evaluated
+
+def eval_while_expression(exp: ast.WhileExpression, env: mobject.Environment) -> MonkeyObject:
+    evaluated = NULL
+    while True:
+        condition = eval(exp.condition, env)
+        if is_error(condition):
+            return condition
+        if not is_truthy(condition):
+            return evaluated
+        extended_env = mobject.Environment.new_enclosed(env)
+        evaluated = eval(exp.body, extended_env)
+        if is_error(evaluated) or is_return(evaluated):
+            return evaluated
 
 def is_truthy(obj: MonkeyObject) -> bool:
     if obj == NULL:

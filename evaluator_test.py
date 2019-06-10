@@ -16,6 +16,9 @@ def test_eval_integer_expression():
         ("5 + 2 * 10", 25),
         ("50 / 2 * 2 + 10", 60),
         ("(5+10*2+15/3)*2+-10", 50),
+        ("let a = 2; a = 3;", 3),
+        ("let a = 5; 5+10*(a=2);", 25),
+        ("let a = 3; let f = fn(){a=1;}; f(); a;", 1)
     ]
 
     for input, expected in tests:
@@ -113,6 +116,19 @@ def test_for_expressions():
         else:
             null_object_test(evaluated)
 
+def test_while_expressions():
+    tests = [
+        ("let i = 2; while(i>0){i = i-1; i;}", 0),
+        ("while(false){2;}", None),
+    ]
+
+    for input, expected in tests:
+        evaluated = eval_test(input)
+        if expected is not None:
+            integer_object_test(evaluated, expected)
+        else:
+            null_object_test(evaluated)
+
 def null_object_test(obj: MonkeyObject):
     return obj == evaluator.NULL
 
@@ -148,7 +164,9 @@ def test_error_handling():
         ('"hello" - "world"', "unknown operator: STRING - STRING"),
         ('fn(x,y){}()', "function call missing required arguments: x, y"),
         ('fn(x,y,z){}(2)', "function call missing required arguments: y, z"),
-        ('{"name": "monkey"}[fn(x){x}];', "unusable as hash key: FUNCTION")
+        ('{"name": "monkey"}[fn(x){x}];', "unusable as hash key: FUNCTION"),
+        ("a = 3;", "variable 'a' does not exist. Can't reassign"),
+        ("8 * (x=2);", "variable 'x' does not exist. Can't reassign"),
     ]
 
     for input, expected in tests:

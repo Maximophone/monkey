@@ -127,6 +127,14 @@ def get_program(input: str, n_statements: int) -> ast.Program:
 
     return program
 
+def get_expression(input: str, n_statements: int, expression_type: Any) -> ast.Expression:
+    program = get_program(input, n_statements)
+    statement = program.statements[0]
+    check_statement(statement, ast.ExpressionStatement)
+    exp = statement.expression
+    check_expression(exp, expression_type)
+    return exp
+
 def test_parsing_prefix_expressions():
     prefix_tests = [
         ("!5;", "!", 5),
@@ -273,6 +281,18 @@ def test_operator_precedence_parsing():
         [
             "add(a*b[2], b[1], 2*[1,2][1])",
             "add((a*(b[2])),(b[1]),(2*([1,2][1])))"
+        ],
+        [
+            "a=2",
+            "(a=2)"
+        ],
+        [
+            "x*(a=2)",
+            "(x*(a=2))"
+        ],
+        [
+            "x*a=2",
+            "((x*a)=2)"
         ]
     ]
 
@@ -510,4 +530,26 @@ def test_parsing_for_expression():
     element = for_exp.element
     check_expression(element, ast.Identifier)
 
-    
+def test_parsing_while_expression():
+    input = """
+    while(x>2){
+        x+3;
+    };
+    """
+
+    while_exp = get_expression(input, 1, ast.WhileExpression)
+
+    infix_expression_test(while_exp.condition, "x", ">", 2)
+
+    body = while_exp.body
+    check_block_statement(body, 1)
+
+    statement: ast.LetStatement = body.statements[0]
+    check_statement(statement, ast.ExpressionStatement)
+
+    exp: ast.InfixExpression = statement.expression
+    infix_expression_test(exp, "x", "+", 3)
+
+def check_block_statement(block: ast.BlockStatement, n_statements: int):
+    assert isinstance(block, ast.BlockStatement), f"Not a block statement. got {type(block)}"
+    assert len(block.statements) == n_statements, f"Incorrect number of statements. got {len(block.statements)}, want {n_statements}"
