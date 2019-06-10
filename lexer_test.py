@@ -28,6 +28,8 @@ def test_next_token():
     "foobar"
     "foo bar"
     [1, 2];
+
+    {5: 2};
     """
 
     tests = [
@@ -117,6 +119,13 @@ def test_next_token():
         (tokens.COMMA, ","),
         (tokens.INT, "2"),
         (tokens.RBRACKET, "]"),
+        (tokens.SEMICOLON, ";"),
+
+        (tokens.LBRACE, "{"),
+        (tokens.INT, "5"),
+        (tokens.COLON, ":"),
+        (tokens.INT, "2"),
+        (tokens.RBRACE, "}"),
         (tokens.SEMICOLON, ";"),
 
         (tokens.EOF, ""),

@@ -1,7 +1,7 @@
 import monkey_ast as ast
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, NamedTuple
 
 INTEGER_OBJ = "INTEGER"
 BOOLEAN_OBJ = "BOOLEAN"
@@ -12,6 +12,7 @@ ERROR_OBJ = "ERROR"
 FUNCTION_OBJ = "FUNCTION"
 BUILTIN_OBJ = "BUILTIN"
 ARRAY_OBJ = "ARRAY"
+HASH_OBJ = "HASH"
 
 class ObjectType(str):
     pass
@@ -25,9 +26,21 @@ class MonkeyObject:
     def inspect(self) -> str:
         raise NotImplementedError
 
+class HashKey(NamedTuple):
+    typ: ObjectType
+    value: int
+
+class HashPair(NamedTuple):
+    key: MonkeyObject
+    value: MonkeyObject
+
+class Hashable(MonkeyObject):
+    @property
+    def hash_key(self) -> HashKey:
+        raise NotImplementedError
 
 @dataclass
-class Integer(MonkeyObject):
+class Integer(Hashable):
     value: int
 
     @property
@@ -38,8 +51,12 @@ class Integer(MonkeyObject):
     def inspect(self) -> str:
         return str(self.value)
 
+    @property
+    def hash_key(self) -> HashKey:
+        return HashKey(self.typ, self.value)
+
 @dataclass
-class Boolean(MonkeyObject):
+class Boolean(Hashable):
     value: bool
 
     @property
@@ -50,8 +67,12 @@ class Boolean(MonkeyObject):
     def inspect(self) -> str:
         return str(self.value).lower()
 
+    @property
+    def hash_key(self) -> HashKey:
+        return HashKey(self.typ, int(self.value))
+
 @dataclass
-class String(MonkeyObject):
+class String(Hashable):
     value: str
 
     @property
@@ -61,6 +82,10 @@ class String(MonkeyObject):
     @property
     def inspect(self) -> str:
         return f'"{self.value}"'
+
+    @property
+    def hash_key(self) -> HashKey:
+        return HashKey(self.typ, self.value.__hash__())
 
 @dataclass
 class Array(MonkeyObject):
@@ -73,6 +98,19 @@ class Array(MonkeyObject):
     @property
     def inspect(self) -> str:
         return f"[{', '.join([el.inspect for el in self.elements])}]" if self.elements else "[]"
+
+@dataclass
+class Hash(MonkeyObject):
+    pairs: Dict[HashKey, HashPair]
+
+    @property
+    def typ(self) -> ObjectType:
+        return HASH_OBJ
+
+    @property
+    def inspect(self) -> str:
+        pairs_str = [f"{pair.key.inspect}: {pair.value.inspect}" for _, pair in self.pairs.items()]
+        return "{"+", ".join(pairs_str)+"}"
 
 class Null(MonkeyObject):
 

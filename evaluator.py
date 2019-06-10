@@ -4,7 +4,7 @@ import monkey_ast as ast
 from monkey_builtins import builtins
 from evaluator_utils import new_error, is_error
 
-from typing import List
+from typing import List, Dict
 
 
 def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
@@ -73,6 +73,8 @@ def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
         if is_error(index):
             return index
         return eval_index_expression(left, index)
+    elif typ == ast.HashLiteral:
+        return eval_hash_literal(node, env)
     else:
         return NULL
 
@@ -111,6 +113,10 @@ def eval_expressions(exps: List[ast.Expression], env: mobject.Environment) -> Li
 def eval_index_expression(left: MonkeyObject, index: MonkeyObject) -> MonkeyObject:
     if left.typ == mobject.ARRAY_OBJ and index.typ == mobject.INTEGER_OBJ:
         return eval_array_index_expression(left, index)
+    elif left.typ == mobject.HASH_OBJ:
+        if not isinstance(index, mobject.Hashable):
+            return new_error("unusable as hash key: {}", index.typ)
+        return eval_hash_index_expression(left, index)
     else:
         return new_error("index operator not supported: {}", left.typ)
 
@@ -120,6 +126,30 @@ def eval_array_index_expression(left: mobject.Array, index: mobject.Integer) -> 
     if idx < 0 or idx > max_idx:
         return NULL
     return left.elements[idx]
+
+def eval_hash_index_expression(left: mobject.Hash, index: mobject.Hashable) -> MonkeyObject:
+    pair = left.pairs.get(index.hash_key)
+    if pair is None:
+        return NULL
+    return pair.value
+
+def eval_hash_literal(node: ast.HashLiteral, env: mobject.Environment) -> MonkeyObject:
+    pairs: Dict[mobject.HashKey, mobject.HashPair] = {}
+
+    for key_node, value_node in node.pairs:
+        key = eval(key_node, env)
+        if is_error(key):
+            return key
+        if not isinstance(key, mobject.Hashable):
+            return new_error("unusable as hash key: {}", key.typ)
+        value = eval(value_node, env)
+        if is_error(value):
+            return value
+        
+        hashed = key.hash_key
+        pairs[hashed] = mobject.HashPair(key=key, value=value)
+    
+    return mobject.Hash(pairs=pairs)
 
 def eval_identifier(node: ast.Identifier, env: mobject.Environment) -> MonkeyObject:
     val = env.get(node.value)

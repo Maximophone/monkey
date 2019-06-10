@@ -1,4 +1,4 @@
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Dict, Tuple
 from dataclasses import dataclass
 import tokens
 
@@ -91,6 +91,15 @@ class IndexExpression(Expression):
 
     def __str__(self):
         return f"({str(self.left)}[{str(self.index)}])"
+
+@dataclass
+class HashLiteral(Expression):
+    token: tokens.Token
+    pairs: List[Tuple[Expression, Expression]] = None
+
+    def __str__(self):
+        str_pairs = [f"{str(k)}:{str(v)}" for k, v in self.pairs] if self.pairs is not None else []
+        return "{" + ", ".join(str_pairs) + "}"
 
 @dataclass
 class IfExpression(Expression):

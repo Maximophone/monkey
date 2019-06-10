@@ -1,7 +1,7 @@
 import lexer
 import monkey_ast as ast
 import parser
-from typing import Any
+from typing import Any, Dict, List, Tuple
 
 
 def test_let_statements():
@@ -64,6 +64,10 @@ def check_expression(expression: ast.Expression, typ: Any, literal: str = None):
     assert isinstance(expression, typ), f"expression is not a {typ}. got {type(expression)}"
     if literal is not None:
         assert expression.token_literal == literal, f"expression token_literal not {literal}. got {expression.token_literal}"
+
+def check_expression_literal(expression: ast.Expression, typ: Any, value: Any):
+    check_expression(expression, typ)
+    assert expression.value == value, f"Literal has incorrect value. got {expression.value}, want {value}"
 
 def test_identifier_expression():
     input = "foobar;"
@@ -427,3 +431,61 @@ def test_parsing_index_expressions():
 
     identifier_test(index.left, "my_array")
     infix_expression_test(index.index, 1, "+", 1)
+
+def test_parsing_hash_literal_string_keys():
+    input = '{"one": 1, "two": 2, "three": 3}'
+
+    program = get_program(input, 1)
+
+    statement = program.statements[0]
+    check_statement(statement, ast.ExpressionStatement)
+
+    hash_lit = statement.expression
+    check_hash_literal(hash_lit, [("one", 1), ("two", 2), ("three", 3)])
+
+def check_hash_literal(hash_lit: ast.HashLiteral, d: List[Tuple[Any, Any]]):
+    check_expression(hash_lit, ast.HashLiteral)
+
+    assert len(hash_lit.pairs) == len(d), f"hash.pairs has wrong length. got {len(hash_lit.pairs)}, want {len(d)}"
+
+    for (k, v), (pair_k, pair_v) in zip(d, hash_lit.pairs):
+        if type(k) == str:
+            check_expression_literal(pair_k, ast.StringLiteral, k)
+        elif type(k) == int:
+            check_expression_literal(pair_k, ast.IntegerLiteral, k)
+        elif type(k) == bool:
+            check_expression_literal(pair_k, ast.Boolean, k)
+        if type(v) == str:
+            check_expression_literal(pair_v, ast.StringLiteral, v)
+        elif type(v) == int:
+            check_expression_literal(pair_v, ast.IntegerLiteral, v)
+        elif type(v) == bool:
+            check_expression_literal(pair_v, ast.Boolean, v)
+        elif type(v) == tuple:
+            infix_expression_test(pair_v, v[0], v[1], v[2])
+
+def test_parsing_empty_hash_literal():
+    input = "{}"
+
+    program = get_program(input, 1)
+
+    statement = program.statements[0]
+    check_statement(statement, ast.ExpressionStatement)
+
+    hash_lit = statement.expression
+    check_hash_literal(hash_lit, [])
+
+def test_parsing_various_hash_literal():
+    tests = [
+        ("{1: 2}", [(1,2)]),
+        ("{true: false, false: true}", [(True, False), (False, True)]),
+        ('{"a": 1+2}', [("a", (1, "+", 2))]),
+    ]
+
+    for input, expected in tests:
+        program = get_program(input, 1)
+        statement = program.statements[0]
+        check_statement(statement, ast.ExpressionStatement)
+        hash_lit = statement.expression
+
+        check_hash_literal(hash_lit, expected)

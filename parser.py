@@ -46,6 +46,7 @@ class Parser:
             tokens.IF: self.parse_if_expression,
             tokens.FUNCTION: self.parse_function_literal,
             tokens.LBRACKET: self.parse_array_literal,
+            tokens.LBRACE: self.parse_hash_literal,
         }
         self.infix_parse_functions: Dict[tokens.TokenType, Callable] = {
             tokens.PLUS: self.parse_infix_expression,
@@ -173,6 +174,32 @@ class Parser:
         array = ast.ArrayLiteral(token=self.cur_token)
         array.elements = self.parse_expression_list(tokens.RBRACKET)
         return array
+    
+    def parse_hash_literal(self) -> ast.Expression:
+        hash = ast.HashLiteral(token=self.cur_token)
+        hash.pairs = []
+
+        while not self.peek_token_is(tokens.RBRACE):
+            self.next_token()
+            key = self.parse_expression(LOWEST)
+
+            if not self.expect_peek(tokens.COLON):
+                return None
+
+            self.next_token()
+
+            value = self.parse_expression(LOWEST)
+
+            hash.pairs.append((key, value))
+            
+            if not self.peek_token_is(tokens.RBRACE) and not self.expect_peek(tokens.COMMA):
+                return None
+
+        if not self.expect_peek(tokens.RBRACE):
+            return None
+
+        return hash
+
 
     def parse_if_expression(self) -> ast.Expression:
         exp = ast.IfExpression(token=self.cur_token)

@@ -31,6 +31,7 @@ NOT_EQ = "!="
 
 COMMA = ","
 SEMICOLON = ";"
+COLON = ":"
 
 LPAREN = "("
 RPAREN = ")"
@@ -51,6 +52,7 @@ RETURN = "RETURN"
 token_ch_dict = {
     "=": Token(ASSIGN, "="),
     ";": Token(SEMICOLON, ";"),
+    ":": Token(COLON, ":"),
     "(": Token(LPAREN, "("),
     ")": Token(RPAREN, ")"),
     ",": Token(COMMA, ","),

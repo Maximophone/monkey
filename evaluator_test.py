@@ -135,6 +135,7 @@ def test_error_handling():
         ('"hello" - "world"', "unknown operator: STRING - STRING"),
         ('fn(x,y){}()', "function call missing required arguments: x, y"),
         ('fn(x,y,z){}(2)', "function call missing required arguments: y, z"),
+        ('{"name": "monkey"}[fn(x){x}];', "unusable as hash key: FUNCTION")
     ]
 
     for input, expected in tests:
@@ -251,6 +252,55 @@ def test_array_index_expressions():
         ("let my_array = [1, 2, 3]; my_array[2]", 3),
         ("[1, 2, 3][3]", None),
         ("[1, 2, 3][-1]", None),
+    ]
+
+    for input, expected in tests:
+        evaluated = eval_test(input)
+        if type(expected) == int:
+            integer_object_test(evaluated, expected)
+        else:
+            null_object_test(evaluated)
+
+def test_hash_literals():
+    input = """
+    let two = "two";
+    {
+        "one": 10 - 9,
+        two: 1 + 1,
+        "thr" + "ee": 6/2,
+        4: 4,
+        true: 5,
+        false: 6
+    }
+    """
+
+    expected = {
+        mobject.String(value="one").hash_key: 1,
+        mobject.String(value="two").hash_key: 2,
+        mobject.String(value="three").hash_key: 3,
+        mobject.Integer(value=4).hash_key: 4,
+        mobject.Boolean(value=True).hash_key: 5,
+        mobject.Boolean(value=False).hash_key: 6
+    }
+
+    evaluated = eval_test(input)
+    assert type(evaluated) == mobject.Hash, f"object is not Hash, got {type(evaluated)}"
+    assert len(evaluated.pairs) == len(expected), f"hash has wrong number of pairs. got {len(evaluated.pairs)}, want {len(expected)}"
+
+    for k, v in expected.items():
+        pair = evaluated.pairs.get(k)
+        assert pair is not None, f"no pair for key {k} can be found in hash"
+        integer_object_test(pair.value, v)
+
+def test_hash_index_expressions():
+    tests = [
+        ('{"foo": 5}["foo"]', 5),
+        ('{"foo": 5}["bar"]', None),
+        ('let key = "foo"; {"foo": 5}[key]', 5),
+        ('{}["foo"]', None),
+        ('{5: 5}[5]', 5),
+        ('{true: 6}[true]', 6),
+        ('{false: 2}[false]', None)
     ]
 
     for input, expected in tests:
