@@ -39,8 +39,11 @@ class Lexer:
 
     def next_token(self):
 
-        while self.ch!=0 and self.ch.isspace():
-            self.read_char()
+        while self.ch!=0 and (self.ch.isspace() or is_comment_tag(self.ch)):
+            if is_comment_tag(self.ch):
+                self.read_comment()
+            else:
+                self.read_char()
 
         if self.ch!=0 and is_alpha(self.ch):
             literal = self.read_identifier()
@@ -71,5 +74,14 @@ class Lexer:
                 break
         return self.input[position:self.position]
 
+    def read_comment(self):
+        while True:
+            self.read_char()
+            if self.ch==0 or self.ch=="\n":
+                break
+
 def is_alpha(char: str) -> bool:
     return char.isalpha() or char=="_"
+
+def is_comment_tag(char: str) -> bool:
+    return char == "#"

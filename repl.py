@@ -5,13 +5,15 @@ import evaluator
 import monkey_object as mobject
 
 from typing import List
+import readline
 
 PROMPT = ">>"
 
-def start():
-    env = mobject.Environment()
+def start(env=None):
+    if env is None:
+        env = mobject.Environment()
     while True:
-        print(PROMPT)
+        print(PROMPT, end=" ")
         line = input()
         if not line:
             return

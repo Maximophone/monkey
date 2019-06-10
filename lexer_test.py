@@ -19,6 +19,11 @@ def test_next_token():
         return false;
     }
 
+    # this is a comment it should all be ignored
+    #
+
+    not_a_comment; # comments again let return {}
+
     a_b;
     "foobar"
     "foo bar"
@@ -98,6 +103,9 @@ def test_next_token():
         (tokens.SEMICOLON, ";"),
         (tokens.RBRACE, "}"),
 
+        (tokens.IDENT, "not_a_comment"),
+        (tokens.SEMICOLON, ";"),
+
         (tokens.IDENT, "a_b"),
         (tokens.SEMICOLON, ";"),
 
@@ -120,7 +128,7 @@ def test_next_token():
     for expected_type, expected_literal in tests:
         tok: tokens.Token = l.next_token()
 
-        assert tok.typ == expected_type, f"Token type wrong: {i}"
+        assert tok.typ == expected_type, f"Token type wrong: {i}. got {tok.typ}, wanted {expected_type}. token: {tok}"
         assert tok.literal == expected_literal, f"Token literal wrong: {i}"
 
         i+=1

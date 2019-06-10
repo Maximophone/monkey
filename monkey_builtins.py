@@ -85,6 +85,13 @@ def check_args(*typs):
 def push(array: mobject.Array, obj: MonkeyObject) -> mobject.Array:
     return mobject.Array(elements=array.elements+[obj])
 
+def puts(*args):
+    for arg in args:
+        if arg.typ != mobject.STRING_OBJ:
+            return new_error("wrong argument type, 'puts' only takes STRING arguments but got {}", arg.typ)
+    for arg in args:
+        print(arg.value)
+
 builtins: Dict[str, mobject.Builtin] = {
     "len": mobject.Builtin(
         fn=len_builtin
@@ -93,4 +100,5 @@ builtins: Dict[str, mobject.Builtin] = {
     "last": mobject.Builtin(fn=last),
     "rest": mobject.Builtin(fn=rest),
     "push": mobject.Builtin(fn=push),
+    "puts": mobject.Builtin(fn=puts),
 }

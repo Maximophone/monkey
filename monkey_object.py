@@ -60,7 +60,7 @@ class String(MonkeyObject):
 
     @property
     def inspect(self) -> str:
-        return self.value
+        return f'"{self.value}"'
 
 @dataclass
 class Array(MonkeyObject):

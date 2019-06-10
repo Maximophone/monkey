@@ -91,7 +91,7 @@ def eval_program(program: ast.Program, env: mobject.Environment) -> MonkeyObject
     return result
 
 def eval_block_statement(block: ast.BlockStatement, env: mobject.Environment) -> MonkeyObject:
-    result: MonkeyObject
+    result: MonkeyObject = NULL
 
     for statement in block.statements:
         result = eval(statement, env)
@@ -220,6 +220,8 @@ def is_truthy(obj: MonkeyObject) -> bool:
 
 def apply_function(fn: MonkeyObject, args: List[MonkeyObject]) -> MonkeyObject:  
     if isinstance(fn, mobject.Function):
+        if len(fn.parameters) > len(args):
+            return new_error("function call missing required arguments: {}", ', '.join([param.value for param in fn.parameters[len(args):]]))
         extended_env = extend_function_env(fn, args)
         evaluated = eval(fn.body, extended_env)
         return unwrap_return_value(evaluated)

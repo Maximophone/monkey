@@ -132,7 +132,9 @@ def test_error_handling():
         ("5; true + false; 5;", "unknown operator: BOOLEAN + BOOLEAN"),
         ("if(10>1){true+false;}", "unknown operator: BOOLEAN + BOOLEAN"),
         ("foobar", "identifier not found: foobar"),
-        ('"hello" - "world"', "unknown operator: STRING - STRING")
+        ('"hello" - "world"', "unknown operator: STRING - STRING"),
+        ('fn(x,y){}()', "function call missing required arguments: x, y"),
+        ('fn(x,y,z){}(2)', "function call missing required arguments: y, z"),
     ]
 
     for input, expected in tests:
@@ -172,9 +174,13 @@ def test_function_application():
         ("let identity = fn(x){return x;}; identity(5);", 5),
         ("let double = fn(x){x*2;}; double(5);", 10),
         ("let add = fn(x, y){x + y}; add(5, 2);", 7),
+        ("fn(){}();", None),
     ]
     for input, expected in tests:
-        integer_object_test(eval_test(input), expected)
+        if expected is not None:
+            integer_object_test(eval_test(input), expected)
+        else:
+            null_object_test(eval_test(input))
 
 def test_closures():
     input = """
