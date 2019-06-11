@@ -31,8 +31,8 @@ def test_next_token():
 
     {5: 2};
 
-    for(x in v){};
-    while(true){};
+    for(x in v){break;};
+    while(true){continue;};
     """
 
     tests = [
@@ -138,6 +138,8 @@ def test_next_token():
         (tokens.IDENT, "v"),
         (tokens.RPAREN, ")"),
         (tokens.LBRACE, "{"),
+        (tokens.BREAK, "break"),
+        (tokens.SEMICOLON, ";"),
         (tokens.RBRACE, "}"),
         (tokens.SEMICOLON, ";"),
 
@@ -146,6 +148,8 @@ def test_next_token():
         (tokens.TRUE, "true"),
         (tokens.RPAREN, ")"),
         (tokens.LBRACE, "{"),
+        (tokens.CONTINUE, "continue"),
+        (tokens.SEMICOLON, ";"),
         (tokens.RBRACE, "}"),
         (tokens.SEMICOLON, ";"),
 

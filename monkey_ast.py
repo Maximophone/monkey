@@ -19,6 +19,10 @@ class Statement(Node):
     def statement_node(self):
         raise NotImplementedError
 
+    @property
+    def token_literal(self):
+        return self.token.literal
+
 @dataclass
 class BlockStatement(Node):
     token: tokens.Token
@@ -36,10 +40,6 @@ class Identifier(Expression):
     token: tokens.Token
     value: str = None
 
-    @property
-    def token_literal(self):
-        return self.token.literal
-
     def __str__(self):
         return self.value
 
@@ -48,10 +48,6 @@ class IntegerLiteral(Expression):
     token: tokens.Token
     value: int = None
 
-    @property
-    def token_literal(self):
-        return self.token.literal
-
     def __str__(self):
         return self.token.literal
 
@@ -59,10 +55,6 @@ class IntegerLiteral(Expression):
 class Boolean(Expression):
     token: tokens.Token
     value: bool = None
-
-    @property
-    def token_literal(self):
-        return self.token.literal
 
     def __str__(self):
         return self.token.literal
@@ -108,10 +100,6 @@ class IfExpression(Expression):
     consequence: BlockStatement = None
     alternative: BlockStatement = None
 
-    @property
-    def token_literal(self):
-        return self.token.literal
-
     def __str__(self):
         return f"if{str(self.condition)} {str(self.consequence)}"+(f"else {str(self.alternative)}" if self.alternative is not None else "")
 
@@ -131,6 +119,9 @@ class WhileExpression(Expression):
     condition: Expression = None
     body: BlockStatement = None
 
+    def __str__(self):
+        return f"while({self.condition})" + "{" + str(self.body) + "}"
+
 @dataclass
 class FunctionLiteral(Expression):
     token: tokens.Token
@@ -138,7 +129,7 @@ class FunctionLiteral(Expression):
     body: BlockStatement = None
 
     def __str__(self):
-        return f"{self.token_literal}({','.join([str(param) for param in (self.parameters if self.parameters is not None else [])])}){str(self.body)}"
+        return f"{self.token_literal}({','.join([str(param) for param in (self.parameters if self.parameters is not None else [])])})"+"{"+f"{str(self.body)}"+"}"
 
 @dataclass
 class CallExpression(Expression):
@@ -154,10 +145,6 @@ class PrefixExpression(Expression):
     token: tokens.Token
     operator: str = None
     right: Expression = None
-
-    @property
-    def token_literal(self):
-        return self.token.literal
     
     def __str__(self):
         return f"({self.operator}{str(self.right)})"
@@ -168,10 +155,6 @@ class InfixExpression(Expression):
     left: Expression = None
     operator: str = None
     right: Expression = None
-
-    @property
-    def token_literal(self):
-        return self.token.literal
 
     def __str__(self):
         return f"({str(self.left)}{self.operator}{str(self.right)})"
@@ -191,10 +174,6 @@ class LetStatement(Statement):
     name: Identifier = None
     value: Expression = None
 
-    @property
-    def token_literal(self):
-        return self.token.literal
-
     def __str__(self):
         return f"{self.token_literal} {str(self.name)} = {str(self.value) if self.value is not None else ''};"
 
@@ -203,21 +182,27 @@ class ReturnStatement(Statement):
     token: tokens.Token
     return_value: Expression = None
 
-    @property
-    def token_literal(self):
-        return self.token.literal
-
     def __str__(self):
         return f"{self.token_literal} {str(self.return_value) if self.return_value is not None else ''};"
+
+@dataclass
+class BreakStatement(Statement):
+    token: tokens.Token
+
+    def __str__(self):
+        return self.token_literal + ";"
+
+@dataclass
+class ContinueStatement(Statement):
+    token: tokens.Token
+
+    def __str__(self):
+        return self.token_literal + ";"
 
 @dataclass
 class ExpressionStatement(Statement):
     token: tokens.Token
     expression: Expression = None
-
-    @property
-    def token_literal(self):
-        return self.token.literal
 
     def __str__(self):
         return str(self.expression) if self.expression is not None else ''

@@ -13,3 +13,13 @@ def is_return(obj: MonkeyObject) -> bool:
     if obj is not None:
         return obj.typ == mobject.RETURN_VALUE_OBJ
     return False
+
+def is_break(obj: MonkeyObject) -> bool:
+    if obj is not None:
+        return obj.typ == mobject.BREAK_OBJ
+    return False
+
+def is_continue(obj: MonkeyObject) -> bool:
+    if obj is not None:
+        return obj.typ == mobject.CONTINUE_OBJ
+    return False

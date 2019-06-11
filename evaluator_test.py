@@ -18,7 +18,8 @@ def test_eval_integer_expression():
         ("(5+10*2+15/3)*2+-10", 50),
         ("let a = 2; a = 3;", 3),
         ("let a = 5; 5+10*(a=2);", 25),
-        ("let a = 3; let f = fn(){a=1;}; f(); a;", 1)
+        ("let a = 3; let f = fn(){a=1;}; f(); a;", 1),
+        ("let a = 2; a = 5;", 5),
     ]
 
     for input, expected in tests:
@@ -107,6 +108,12 @@ def test_for_expressions():
     tests = [
         ("for(x in []){1}", None),
         ("for(x in [1,2,3]){x;}", 3),
+        ("let a = 0; for(x in range(10)){a=x;}; a;", 9),
+        ("let a = 5; for(x in range(10)){a=x; break;}; a;", 0),
+        ("for(x in range(10)){continue}", None),
+        ("let sum=0; for(x in range(5)){if(x==2){continue; sum = 100;}; sum = sum + x;}; sum;", 8),
+        ("for(x in range(5)){x}", 4), # test return value of loop
+        ("let a = for(x in range(5)){x}; a;", 4)
     ]
 
     for input, expected in tests:
@@ -120,6 +127,10 @@ def test_while_expressions():
     tests = [
         ("let i = 2; while(i>0){i = i-1; i;}", 0),
         ("while(false){2;}", None),
+        ("let i = 0; while(i<10){if(i==5){return 8;}; i = i+1;}", 8),
+        ("let i = 0; while(i<10){if(i==5){break; i = 6;}; i = i+1;}; i;", 5),
+        ("while(true){break;}", None),
+        ("let i = 0; let a = while(i<10){i = i+1; i;}; a;", 10)
     ]
 
     for input, expected in tests:
@@ -167,6 +178,10 @@ def test_error_handling():
         ('{"name": "monkey"}[fn(x){x}];', "unusable as hash key: FUNCTION"),
         ("a = 3;", "variable 'a' does not exist. Can't reassign"),
         ("8 * (x=2);", "variable 'x' does not exist. Can't reassign"),
+        ("break;", "break cannot be used outside of a loop"),
+        ("continue;", "continue cannot be used outside of a loop"),
+        ('len(1)', "argument to 'len' not supported, got INTEGER"),
+        ('len("one", "two")', "wrong number of arguments. got 2, want 1"),
     ]
 
     for input, expected in tests:
@@ -242,8 +257,6 @@ def test_builtin_functions():
         ('len("")', 0),
         ('len("four")', 4),
         ('len("hello world")', 11),
-        ('len(1)', "argument to 'len' not supported, got INTEGER"),
-        ('len("one", "two")', "wrong number of arguments. got 2, want 1"),
         ('len([1, 2, 3])', 3),
         ('let a = [1, 2]; len(a);', 2),
         ('first([1,2])', 1),
@@ -253,6 +266,10 @@ def test_builtin_functions():
         ('range(5)', (0, 1, 2, 3, 4)),
         ('range(0)', ()),
         ('range(-1)', ()),
+        ("to_str(1234)", "1234"),
+        ("to_str(true)", "True"),
+        ("to_str(false)", "False"),
+        ('to_str("test")', "test"),
     ]
 
     for input, expected in tests:
@@ -260,7 +277,7 @@ def test_builtin_functions():
         if type(expected) == int:
             integer_object_test(evaluated, expected)
         elif type(expected) == str:
-            error_test(evaluated, expected)
+            string_object_test(evaluated, expected)
         elif type(expected) == tuple:
             assert type(evaluated) == mobject.Array, f"object is not Array. got {type(evaluated)}"
             for i, exp in enumerate(expected):

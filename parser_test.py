@@ -33,6 +33,17 @@ def test_return_statements():
 
         literal_expression_test(statement.return_value, expected_value)
 
+def test_break_continue_statements():
+    tests = [
+        ("break;", ast.BreakStatement, "break"),
+        ("continue;", ast.ContinueStatement, "continue"),
+    ]
+
+    for input, expected_typ, expected_value in tests:
+        program = get_program(input, 1)
+        statement = program.statements[0]
+        check_statement(statement, expected_typ, expected_value)
+
 def let_statement_test(s, name):
     assert s.token_literal == "let", f"statement token_literal not 'let'. got {s.token_literal}"
     assert isinstance(s, ast.LetStatement), f"statement is not a LetStatement. got {type(s)}"
@@ -513,6 +524,7 @@ def test_parsing_various_hash_literal():
 def test_parsing_for_expression():
     input = """
     for(x in range(2)){
+        break;
         x+3;
     };
     """
@@ -530,9 +542,19 @@ def test_parsing_for_expression():
     element = for_exp.element
     check_expression(element, ast.Identifier)
 
+    body = for_exp.body
+    check_block_statement(body, 2)
+
+    statement: ast.BreakStatement = body.statements[0]
+    check_statement(statement, ast.BreakStatement)
+
+    statement: ast.ExpressionStatement = body.statements[1]
+    check_statement(statement, ast.ExpressionStatement)
+
 def test_parsing_while_expression():
     input = """
     while(x>2){
+        continue
         x+3;
     };
     """
@@ -542,9 +564,12 @@ def test_parsing_while_expression():
     infix_expression_test(while_exp.condition, "x", ">", 2)
 
     body = while_exp.body
-    check_block_statement(body, 1)
+    check_block_statement(body, 2)
 
-    statement: ast.LetStatement = body.statements[0]
+    statement: ast.ContinueStatement = body.statements[0]
+    check_statement(statement, ast.ContinueStatement)
+
+    statement: ast.ExpressionStatement = body.statements[1]
     check_statement(statement, ast.ExpressionStatement)
 
     exp: ast.InfixExpression = statement.expression

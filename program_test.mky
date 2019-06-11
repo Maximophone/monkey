@@ -4,10 +4,10 @@ let b = "blih";
 
 puts(a+b);
 
-let while = fn(n_iterations, action){
+let fwhile = fn(n_iterations, action){
 	if(n_iterations > 0){
 		action();
-		return while(n_iterations - 1, action);
+		return fwhile(n_iterations - 1, action);
 	};
 };
 
@@ -15,7 +15,7 @@ let print_test = fn(){
 	puts("test");
 };
 
-while(5, print_test);
+fwhile(5, print_test);
 
 let factorial = fn(n){
 	if(n < 1){
@@ -31,7 +31,7 @@ let factorial = fn(n){
 
 factorial(10);
 
-while(96, fn(){});
+fwhile(96, fn(){});
 
 let digit_to_str = {
 	0: "0",
@@ -65,3 +65,96 @@ puts(int_to_str(108973498));
 for(x in range(5)){
 	puts(x);
 };
+
+let i = 0;
+let N = 10000;
+puts("starting loop with " + int_to_str(N) + " elements");
+while(i<N){
+	i = i + 1;
+};
+puts("Finished");
+puts(i);
+
+let i = 0;
+let max_iter = 10000;
+let step = 3;
+
+while(i<max_iter){
+	if(i/17 == 5){
+		break;
+	};
+	i = i + step;
+};
+
+puts(i);
+
+
+for(x in range(100)){
+	if(mod(x, 5)!=0){
+		continue;
+	};
+	puts(x);
+}
+
+let swap = fn(arr, i ,j){
+	let n = 0;
+	let new_arr = [];
+	for(x in arr){
+		if(n==i){
+			new_arr = push(new_arr, arr[j]);
+		}
+		else {
+			if(n==j){
+				new_arr = push(new_arr, arr[i]);
+			}
+			else {
+				new_arr = push(new_arr, x);
+			}
+		};
+		n = n + 1;
+	}
+	return new_arr;
+};
+
+let bubble = fn(arr){
+	let n = len(arr);
+	for(i in range(n)){
+		for(j in range(n)){
+			if(j>n-i-2){
+				continue;
+			};
+			if(arr[j]>arr[j+1]){
+				arr = swap(arr, j, j+1);
+			};
+		};
+	};
+	return arr;
+};
+
+let array_to_str = fn(arr){
+	let x_first = first(arr);
+	let x_rest = rest(arr);
+	let str = "[" + to_str(x_first);
+	for(x in x_rest){
+		str = str + ", " + to_str(x);
+	};
+	return str + "]";
+};
+
+let sorted = bubble([1,2,3,0,53,31,12]);
+puts(array_to_str(sorted));
+
+puts("defining random array function");
+
+let random_array = fn(size, max){
+	let arr = [];
+	for(_ in range(size)){arr = push(arr, randint(max))};
+};
+
+puts("defined");
+
+rarr = random_array(10, 10);
+puts("random array generated");
+puts(array_to_str(rarr));
+puts("sorting");
+puts(array_to_str(bubble(rarr)));

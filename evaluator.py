@@ -2,7 +2,7 @@ import monkey_object as mobject
 from monkey_object import MonkeyObject, NULL, TRUE, FALSE
 import monkey_ast as ast
 from monkey_builtins import builtins
-from evaluator_utils import new_error, is_error, is_return
+from evaluator_utils import new_error, is_error, is_return, is_break, is_continue
 
 from typing import List, Dict
 
@@ -55,6 +55,10 @@ def eval(node: ast.Node, env: mobject.Environment) -> MonkeyObject:
         if is_error(val):
             return val
         return mobject.ReturnValue(val)
+    elif typ == ast.BreakStatement:
+        return mobject.Break()
+    elif typ == ast.ContinueStatement:
+        return mobject.Continue()
     elif typ == ast.LetStatement:
         val = eval(node.value, env)
         if is_error(val):
@@ -101,6 +105,10 @@ def eval_program(program: ast.Program, env: mobject.Environment) -> MonkeyObject
             return result.value
         elif result.typ == mobject.ERROR_OBJ:
             return result
+        elif is_break(result):
+            return new_error("break cannot be used outside of a loop")
+        elif is_continue(result):
+            return new_error("continue cannot be used outside of a loop")
 
     return result
 
@@ -109,7 +117,18 @@ def eval_block_statement(block: ast.BlockStatement, env: mobject.Environment) ->
 
     for statement in block.statements:
         result = eval(statement, env)
-        if result is not None and (result.typ == mobject.RETURN_VALUE_OBJ or result.typ == mobject.ERROR_OBJ):
+        if is_return(result) or is_break(result) or is_continue(result) or is_error(result):
+            return result
+    return result
+
+def eval_loop_block_statement(block: ast.BlockStatement, env: mobject.Environment) -> MonkeyObject:
+    result: MonkeyObject = NULL
+
+    for statement in block.statements:
+        result = eval(statement, env)
+        if result is None:
+            continue
+        if result.typ in (mobject.RETURN_VALUE_OBJ, mobject.BREAK_OBJ, mobject.CONTINUE_OBJ, mobject.ERROR_OBJ):
             return result
     return result
 
@@ -257,9 +276,13 @@ def eval_for_expression(exp: ast.ForExpression, env: mobject.Environment) -> Mon
     evaluated = NULL
     for value in iterator.elements:
         extended_env = extend_for_body_env(env, exp.element, value)
-        evaluated = eval(exp.body, extended_env)
+        evaluated = eval_loop_block_statement(exp.body, extended_env)
         if is_error(evaluated) or is_return(evaluated):
             return evaluated
+        if is_break(evaluated):
+            return NULL
+        if is_continue(evaluated):
+            evaluated = NULL
     return evaluated
 
 def eval_while_expression(exp: ast.WhileExpression, env: mobject.Environment) -> MonkeyObject:
@@ -271,9 +294,14 @@ def eval_while_expression(exp: ast.WhileExpression, env: mobject.Environment) ->
         if not is_truthy(condition):
             return evaluated
         extended_env = mobject.Environment.new_enclosed(env)
-        evaluated = eval(exp.body, extended_env)
+        evaluated = eval_loop_block_statement(exp.body, extended_env)
         if is_error(evaluated) or is_return(evaluated):
             return evaluated
+        if is_break(evaluated):
+            return NULL
+        if is_continue(evaluated):
+            evaluated = NULL
+    return evaluated
 
 def is_truthy(obj: MonkeyObject) -> bool:
     if obj == NULL:

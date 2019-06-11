@@ -13,6 +13,8 @@ FUNCTION_OBJ = "FUNCTION"
 BUILTIN_OBJ = "BUILTIN"
 ARRAY_OBJ = "ARRAY"
 HASH_OBJ = "HASH"
+BREAK_OBJ = "BREAK"
+CONTINUE_OBJ = "CONTINUE"
 
 class ObjectType(str):
     pass
@@ -133,6 +135,27 @@ class ReturnValue(MonkeyObject):
     @property
     def inspect(self) -> str:
         return self.value.inspect()
+
+@dataclass
+class Break(MonkeyObject):
+
+    @property
+    def typ(self) -> ObjectType:
+        return BREAK_OBJ
+
+    @property
+    def inspect(self) -> str:
+        return "break"
+
+@dataclass
+class Continue(MonkeyObject):
+    @property
+    def typ(self) -> ObjectType:
+        return CONTINUE_OBJ
+    
+    @property
+    def inspect(self) -> str:
+        return "continue"
 
 @dataclass
 class Error(MonkeyObject):

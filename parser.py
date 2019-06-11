@@ -92,6 +92,8 @@ class Parser:
         parse_typ_dict = {
             tokens.LET: self.parse_let_statement,
             tokens.RETURN: self.parse_return_statement,
+            tokens.BREAK: self.parse_break_continue_statement,
+            tokens.CONTINUE: self.parse_break_continue_statement,
         }
         return parse_typ_dict.get(self.cur_token.typ, self.parse_expression_statement)()
 
@@ -120,6 +122,19 @@ class Parser:
         self.next_token()
 
         statement.return_value = self.parse_expression(LOWEST)
+
+        if self.peek_token_is(tokens.SEMICOLON):
+            self.next_token()
+
+        return statement
+
+    def parse_break_continue_statement(self):
+        if self.cur_token.typ == tokens.BREAK:
+            statement = ast.BreakStatement(token=self.cur_token)
+        elif self.cur_token.typ == tokens.CONTINUE:
+            statement = ast.ContinueStatement(token=self.cur_token)
+        else:
+            return None
 
         if self.peek_token_is(tokens.SEMICOLON):
             self.next_token()
@@ -292,7 +307,7 @@ class Parser:
 
         self.next_token()
 
-        while not self.cur_token_is(tokens.RBRACE):
+        while not self.cur_token_is(tokens.RBRACE) and not self.cur_token_is(tokens.EOF):
             statement = self.parse_statement()
             if statement is not None:
                 block.statements.append(statement)

@@ -50,6 +50,8 @@ RETURN = "RETURN"
 FOR = "FOR"
 IN = "IN"
 WHILE = "WHILE"
+BREAK = "BREAK"
+CONTINUE = "CONTINUE"
 
 
 token_ch_dict = {
@@ -89,6 +91,8 @@ token_alpha_dict = {
     "for": Token(FOR, "for"),
     "in": Token(IN, "in"),
     "while": Token(WHILE, "while"),
+    "break": Token(BREAK, "break"),
+    "continue": Token(CONTINUE, "continue"),
 }
 
 peeking = {

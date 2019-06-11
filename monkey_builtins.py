@@ -3,6 +3,8 @@ from monkey_object import MonkeyObject, NULL
 from typing import Dict
 from evaluator_utils import new_error
 
+import random
+
 def check_args_len(args, n) -> mobject.Error:
     if len(args) != n:
         return new_error("wrong number of arguments. got {}, want {}", len(args), n)
@@ -91,9 +93,18 @@ def puts(*args):
     for arg in args:
         print(arg.value)
 
+def to_str(arg: MonkeyObject) -> mobject.String:
+    if arg.typ not in (mobject.STRING_OBJ, mobject.INTEGER_OBJ, mobject.BOOLEAN_OBJ):
+        return new_error("wrong argument type, 'to_str' does not accept {}", arg.typ)
+    return mobject.String(value=str(arg.value))
+
 @check_single_arg(mobject.INTEGER_OBJ)
 def range_(n: mobject.Integer) -> mobject.Array:
     return mobject.Array(elements=[mobject.Integer(value=val) for val in range(n.value)])
+
+@check_single_arg(mobject.INTEGER_OBJ)
+def randint(n: mobject.Integer) -> mobject.Integer:
+    return mobject.Integer(value=random.randint(0, n.value))
 
 builtins: Dict[str, mobject.Builtin] = {
     "len": mobject.Builtin(
@@ -105,4 +116,6 @@ builtins: Dict[str, mobject.Builtin] = {
     "push": mobject.Builtin(fn=push),
     "puts": mobject.Builtin(fn=puts),
     "range": mobject.Builtin(fn=range_),
+    "to_str": mobject.Builtin(fn=to_str),
+    "randint": mobject.Builtin(fn=randint),
 }
